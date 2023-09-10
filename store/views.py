@@ -12,7 +12,7 @@ import random
 import uuid
 import re
 
-from django.contrib import auth
+#from django.contrib import auth
 
 
 
@@ -199,17 +199,17 @@ def login(request):
         if user is not None:
             if user.is_verified:
                 if check_password(password, user.password):
-#                     user_details = {
-#                     'first_name': user.first_name,
-#                     'last_name': user.last_name,
-#                     'email': user.email.lower(),
-#                     'phone': user.phone,
-#                     'user_id': user.user_id
-#                 }
+                    user_details = {
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'email': user.email.lower(),
+                    'phone': user.phone,
+                    'user_id': user.user_id
+                }
                     success = {
                             'status': 'success',
                             'message': f'Successfully logged in as {email}',
-                            # 'data': user_details
+                            'data': user_details
                         } # Redirect to the homepage after successful login
                     return JsonResponse (success, status = 200)
                 else:
@@ -353,14 +353,13 @@ def add_to_wishlist(request):
     if request.method == 'POST':
         user_id = request.POST['user_id']
         product_id = request.POST['product_id']
-        quantity = request.POST['quantity']
 
         try:
             user = User.objects.filter(user_id = user_id).first()
             product = Product.objects.filter(product_id = product_id).first()
             if product is not None:
                 if user is not None:
-                    WishList.objects.create(user_id=user_id, product_id= product_id, quantity= quantity)
+                    WishList.objects.create(user_id=user_id, product_id= product_id)
 
                     success = {'status': 'Success', 'message': 'Successfully added to wishlist'}
                     return JsonResponse(success, status = 200)
@@ -389,8 +388,7 @@ def get_wishlist_items(request):
 
                     product_details = {
                         'Product_name': product.product_name,
-                        'Product_description': product.description,
-                        'quantity': wishlist.quantity
+                        'Product_description': product.description
                     }
                     wishlist_data.append(product_details)
 
@@ -419,6 +417,48 @@ def get_wishlist_items(request):
 
 
 
+def move_to_cart(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        product_id = request.POST.get('product_id')
+
+        if user_id is not None and product_id is not None:
+            try:
+                product = get_object_or_404(Product, product_id=product_id)
+                wishlist_item = get_object_or_404(WishList, user_id=user_id, product_id=product_id)
+
+                cart_item, created = Cart.objects.get_or_create(user_id=user_id, product_id=product_id)
+
+                if not created:
+                    cart_item.quantity += 1
+                    cart_item.save()
+
+                    wishlist_item.delete()
+
+                    success = {'status': 'Success', 'message': 'Product moved to cart'}
+                    return JsonResponse(success, status=200)
+                
+            except Product.DoesNotExist:
+                error = {'status': 'Failure', 'message': 'Product not found'}
+                return JsonResponse(error, status=404)
+
+            except WishList.DoesNotExist:
+                error = {'status': 'Failure', 'message': 'Product not found in the wishlist'}
+                return JsonResponse(error, status=404)
+
+            except Exception as e:
+                error = {'status': 'Failure', 'message': str(e)}
+                return JsonResponse(error, status=400)
+
+        else:
+            error = {'status': 'Failure', 'message': 'user_id and product_id are required'}
+            return JsonResponse(error, status=400)
+
+    else:
+        error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
+        return JsonResponse(error, status=405)
+
+
 ####### ADD ADDRESS
 ########### ORDERS
 ######### DELETE FROM CART
@@ -426,7 +466,6 @@ def get_wishlist_items(request):
 ######### SAVE FOR LATER (CART TO WISHLIST)
 ######### MOVE WISHLIST TO CART 
 ######### CHECKOUT
-
 
 
 

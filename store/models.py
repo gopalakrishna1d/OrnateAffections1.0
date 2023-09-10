@@ -11,7 +11,7 @@ class User(models.Model):
     is_verified = models.BooleanField(default=False)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, unique=True)
     otp = models.CharField(max_length=7, null=False, default= not None)
     otp_expiration = models.DateTimeField(default=timezone.now)
     created_dtm = models.DateTimeField(default= None)
@@ -47,10 +47,15 @@ class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
     quantity = models.IntegerField(default=1)
 
+    class Meta:
+        unique_together = ('user', 'product')
+
 class WishList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-    quantity = models.IntegerField(default=1)
+
+    class Meta:
+        unique_together = ('user', 'product')
 
 # # Category model
 # class Category(models.Model):
