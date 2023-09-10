@@ -396,7 +396,7 @@ def get_wishlist_items(request):
                     'status': 'Success',
                     'message': 'wishlist fetched successfully',
                     'data': wishlist_data
-                }
+                } 
                 return JsonResponse(response_data, status=200)
 
             except WishList.DoesNotExist:
