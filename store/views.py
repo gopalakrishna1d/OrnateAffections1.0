@@ -257,26 +257,26 @@ def delete_user(request):
 
 # Product section
 
-def add_product(request):
-    if request.method == "POST":
-        product_name = request.POST['product_name']
-        description = request.POST['description']
-        price = request.POST['price']
-        stock_quantity = request.POST['stock_quantity']
+# def add_product(request):
+#     if request.method == "POST":
+#         product_name = request.POST['product_name']
+#         description = request.POST['description']
+#         price = request.POST['price']
+#         stock_quantity = request.POST['stock_quantity']
 
-        product_id = uuid.uuid4()
-        try:
-            product = Product.objects.create(product_id=product_id, description= description, product_name= product_name, price=price, stock_quantity=stock_quantity)
-            product.save()
+#         try:
+#             product = Product.objects.create(description= description, product_name= product_name, price=price, stock_quantity=stock_quantity)
 
-            success = {'status': 'Success','message':'Product added successfully'}
-            return JsonResponse (success, status = 200)
-        except Exception as e:
-            print (e)
-            error = {'status': 'Failure','message':'Problem adding product'}
-            return JsonResponse(error, status=400)
+#             success = {'status': 'Success','message':'Product added successfully'}
+#             return JsonResponse (success, status = 200)
+#         except Exception as e:
+#             print (e)
+#             error = {'status': 'Failure','message':'Problem adding product'}
+#             return JsonResponse(error, status=400)
 
 
+
+# Cart and Wishlist section
 
 def add_to_cart(request):
     if request.method == 'POST':
@@ -429,14 +429,13 @@ def move_to_cart(request):
 
                 cart_item, created = Cart.objects.get_or_create(user_id=user_id, product_id=product_id)
 
-                if not created:
-                    cart_item.quantity += 1
-                    cart_item.save()
+                cart_item.quantity += 1
+                cart_item.save()
 
-                    wishlist_item.delete()
+                wishlist_item.delete()
 
-                    success = {'status': 'Success', 'message': 'Product moved to cart'}
-                    return JsonResponse(success, status=200)
+                success = {'status': 'Success', 'message': 'Product moved to cart'}
+                return JsonResponse(success, status=200)
                 
             except Product.DoesNotExist:
                 error = {'status': 'Failure', 'message': 'Product not found'}
@@ -459,12 +458,113 @@ def move_to_cart(request):
         return JsonResponse(error, status=405)
 
 
+
+
+def save_for_later(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        product_id = request.POST.get('product_id')
+
+        if user_id is not None and product_id is not None:
+            try:
+                product = get_object_or_404(Product, product_id=product_id)
+                cart_item = get_object_or_404(Cart, user_id=user_id, product_id=product_id)
+
+                wishlist_item, created = WishList.objects.get_or_create(user_id=user_id, product_id=product_id)
+
+                wishlist_item.save()
+
+                cart_item.delete()
+
+                success = {'status': 'Success', 'message': 'Product moved to Wishlist'}
+                return JsonResponse(success, status=200)
+                
+            except Product.DoesNotExist:
+                error = {'status': 'Failure', 'message': 'Product not available'}
+                return JsonResponse(error, status=404)
+
+            except WishList.DoesNotExist:
+                error = {'status': 'Failure', 'message': 'Product not found in the Wishlist'}
+                return JsonResponse(error, status=404)
+
+            except Exception as e:
+                error = {'status': 'Failure', 'message': str(e)}
+                return JsonResponse(error, status=400)
+
+        else:
+            error = {'status': 'Failure', 'message': 'user_id and product_id are required'}
+            return JsonResponse(error, status=400)
+
+    else:
+        error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
+        return JsonResponse(error, status=405)
+
+
+
+def delete_from_cart(request):
+    if request.method=="POST":
+        user_id = request.POST['user_id']
+        product_id = request.POST['product_id']
+        if user_id is not None and product_id is not None:
+            try:
+                cart = get_object_or_404(Cart, user_id=user_id, product_id=product_id)
+                cart.delete()
+
+                success = {'status': 'Success', 'message': 'Product deleted from cart'}
+                return JsonResponse(success, status=200)
+            
+            except Cart.DoesNotExist:
+                error = {'status': 'Failure', 'message': 'Product already deleted'}
+                return JsonResponse(error, status=404)
+            
+            except Exception as e:
+                error = {'status': 'Failure', 'message': str(e)}
+                return JsonResponse(error, status=400)
+            
+        else:
+            error = {'status': 'Failure', 'message': 'user_id and product_id are required'}
+            return JsonResponse(error, status=400)
+        
+    else:
+        error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
+        return JsonResponse(error, status=405)
+
+
+
+def remove_from_wishlist(request):
+    if request.method=="POST":
+        user_id = request.POST['user_id']
+        product_id = request.POST['product_id']
+        if user_id is not None and product_id is not None:
+            try:
+                wishlist_item = get_object_or_404(WishList, user_id=user_id, product_id=product_id)
+                wishlist_item.delete()
+
+                success = {'status': 'Success', 'message': 'Product removed from wishlist'}
+                return JsonResponse(success, status=200)
+            
+            except WishList.DoesNotExist:
+                error = {'status': 'Failure', 'message': 'Product already removed'}
+                return JsonResponse(error, status=404)
+            
+            except Exception as e:
+                error = {'status': 'Failure', 'message': str(e)}
+                return JsonResponse(error, status=400)
+            
+        else:
+            error = {'status': 'Failure', 'message': 'user_id and product_id are required'}
+            return JsonResponse(error, status=400)
+        
+    else:
+        error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
+        return JsonResponse(error, status=405)
+
+
+
+
 ####### ADD ADDRESS
 ########### ORDERS
-######### DELETE FROM CART
-######### DELETE FROM WISHLIST
 ######### SAVE FOR LATER (CART TO WISHLIST)
-######### MOVE WISHLIST TO CART 
 ######### CHECKOUT
 
 

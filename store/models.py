@@ -34,12 +34,31 @@ class user_addr(models.Model):
     Address=models.ForeignKey(ShippingAddress, on_delete=models.DO_NOTHING)
 
 
-class Product(models.Model):
-    product_id = models.UUIDField(default=uuid.uuid4, primary_key=True)
-    product_name = models.CharField(max_length=255)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock_quantity = models.IntegerField()
+# class Product(models.Model):
+#     product_name = models.CharField(max_length=255)
+#     description = models.TextField()
+#     price = models.DecimalField(max_digits=10, decimal_places=2)
+#     stock_quantity = models.IntegerField()
+    
+#     product_id = models.CharField(max_length=10, primary_key=True, unique=True)
+
+#     def save(self, *args, **kwargs):
+#         if not self.product_id:
+#             last_product = Product.objects.order_by('-product_id').first()
+#             if last_product:
+#                 last_id = int(last_product.product_id.replace('prod', ''))
+#                 new_id = f'prod{str(last_id + 1).zfill(3)}'
+#             else:
+#                 new_id = 'prod001'
+
+#             self.product_id = new_id
+
+#         super().save(*args, **kwargs)
+
+#     def __str__(self):
+#         return self.product_id
+
+
 
 
 class Cart(models.Model):
