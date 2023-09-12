@@ -47,6 +47,54 @@ def shipping_addr(request):
 #     return render(request, 'manage_shipping_address.html', {'shipping_addresses': shipping_addresses})
 
 
+
+# def get_addr(request):
+#     if request.method == 'POST':
+#         user_id = request.POST.get('user_id')
+#         if user_id is not None:
+#             try:
+#                 addr_ids = get_list_or_404(UserAddr, user_id=user_id)
+#                 addresses = []
+
+#                 for addr_id in addr_ids:
+#                     address = get_object_or_404(ShippingAddress, addr_id=addr_id.addr)
+
+#                     user_address = {
+#                         'name': address.name,
+#                         'address': address.address,
+#                         'city': address.city,
+#                         'state': address.state,
+#                         'postal_code': address.postal_code,
+#                         'phone': address.phone
+#                     }
+#                     addresses.append(user_address)
+
+#                 response_data = {
+#                     'status': 'Success',
+#                     'message': 'Addresses fetched successfully',
+#                     'data': addresses
+#                 }
+#                 return JsonResponse(response_data, status=200)
+
+#             except UserAddr.DoesNotExist:
+#                 error = {'status': 'Failure', 'message': 'user-address link not found'}
+#                 return JsonResponse(error, status=404)
+
+#             except ShippingAddress.DoesNotExist:
+#                 error = {'status': 'Failure', 'message': 'Shipping address not found'}
+#                 return JsonResponse(error, status=404)
+
+#             except Exception as e:
+#                 error = {'status': 'Failure', 'message': str(e)}
+#                 return JsonResponse(error, status=400)
+
+#         else:
+#             error = {'status': 'Failure', 'message': 'user_id is required'}
+#             return JsonResponse(error, status=400)
+
+############## Test the above
+
+
 def delete_addr(request):
     if request.method == "POST":
         user_id = request.POST.get('user_id')
@@ -69,7 +117,3 @@ def delete_addr(request):
         except Exception as e:
             print(e)
             return JsonResponse({'status': 'Failure', 'message': str(e)}, status=400)
-
-
-
-########## Get Addresses
