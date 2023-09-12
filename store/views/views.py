@@ -53,6 +53,7 @@ def add_product(request):
 ######### ORDER CANCEL
 ######### DELETE ORDER
 ######### REVIEW
+######### view orders
 
 ######### ADMIN CONSOLE (admin required endpoints and pages)
 ######### ADMIN LOGIN (If user exists in user and admin tables)

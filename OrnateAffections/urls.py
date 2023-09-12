@@ -27,5 +27,6 @@ urlpatterns = [
     path('remove_from_wishlist/', cart_wishlist_views.remove_from_wishlist, name='remove_from_wishlist'),
     
     path('shipping_addr/', addr_views.shipping_addr, name='shipping_addr'),
+    path('get_addr/', addr_views.get_addr, name='get_addr'),
     path('delete_addr/', addr_views.delete_addr, name='delete_addr'),
 ]

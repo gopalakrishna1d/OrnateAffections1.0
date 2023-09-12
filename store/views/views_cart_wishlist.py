@@ -8,29 +8,38 @@ from django.http import JsonResponse
 
 def add_to_cart(request):
     if request.method == 'POST':
-        user_id = request.POST['user_id']
-        product_id = request.POST['product_id']
-        quantity = request.POST['quantity']
+        user_id = request.POST.get('user_id')
+        product_id = request.POST.get('product_id')
+        quantity = request.POST.get('quantity')
 
         try:
-            user = User.objects.filter(user_id = user_id).first()
-            product = Product.objects.filter(product_id = product_id).first()
-            if product is not None:
-                if user is not None:
-                    Cart.objects.create(user_id=user_id, product_id= product_id, quantity= quantity)
+            user = get_object_or_404(User, user_id=user_id)
+            product = get_object_or_404(Product, product_id=product_id)
 
-                    success = {'status': 'Success', 'message': 'Successfully added to cart'}
-                    return JsonResponse(success, status = 200)
-                else:
-                    error= {'status': 'Failure', 'message': 'User not fount'}
-                    return JsonResponse (error, status = 404)
+            if int(quantity) <= product.stock_quantity:
+                Cart.objects.create(user=user, product=product, quantity=quantity)
+                success = {'status': 'Success', 'message': 'Successfully added to cart'}
+                return JsonResponse(success, status=200)
             else:
-                error= {'status': 'Failure', 'message': 'Product not fount'}
-                return JsonResponse (error, status = 404)
+                error = {'status': 'Failure', 'message': 'Quantity exceeds available stock'}
+                return JsonResponse(error, status=400)
+
+        except User.DoesNotExist:
+            error = {'status': 'Failure', 'message': 'User not found'}
+            return JsonResponse(error, status=404)
+
+        except Product.DoesNotExist:
+            error = {'status': 'Failure', 'message': 'Product not found'}
+            return JsonResponse(error, status=404)
+
         except Exception as e:
             print(e)
             error = {'status': 'Failure', 'message': 'Error adding to cart'}
-            return JsonResponse(error, status = 400)
+            return JsonResponse(error, status=400)
+
+    else:
+        error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
+        return JsonResponse(error, status=405)
 # # Add to Cart View (simplified)
 # @login_required
 # def add_to_cart(request, product_id):

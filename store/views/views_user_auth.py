@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from django.contrib.auth.decorators import login_required
-from ..models import User, ShippingAddress, UserAddr, Order # OrderItem, Payment
+from ..models import User, ShippingAddress, UserAddr, Order, Admin # OrderItem, Payment
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
@@ -20,7 +20,7 @@ def signup(request):
         last_name = request.POST['last_name']
         phone = request.POST['phone']
         password = request.POST['password']
-        role = 'Customer' or request.POST['role']
+        role =  request.POST['role']
 
         if not first_name or not last_name or not phone or not email or not password:
             error = {'status': 'failure', 'message': 'Please fill in all the required fields'}
@@ -29,7 +29,7 @@ def signup(request):
         if not username:
             username = first_name
 
-        if not role:
+        if role is None:
             role = 'Customer'
 
         if len(password) < 8:
@@ -65,6 +65,9 @@ def signup(request):
             last_name=last_name, password=password_hash, phone=phone, is_verified=False, 
             created_dtm=current_timestamp, modified_dtm=current_timestamp, role = role
         )
+
+        if role == 'Admin':
+            Admin.objects.create(user_id=user_id, username=username, password=password_hash, email=email, first_name=first_name, last_name=last_name)
 
         send_mail(
             'OTP Verification',
