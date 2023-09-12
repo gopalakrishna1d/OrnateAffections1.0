@@ -22,4 +22,7 @@ urlpatterns = [
     path('save_for_later/', views.save_for_later, name='save_for_later'),
     path('delete_from_cart/', views.delete_from_cart, name='delete_from_cart'),
     path('remove_from_wishlist/', views.remove_from_wishlist, name='remove_from_wishlist'),
+    
+    path('shipping_addr/', views.shipping_addr, name='shipping_addr'),
+    path('delete_addr/', views.delete_addr, name='delete_addr'),
 ]

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from django.contrib.auth.decorators import login_required
-from .models import User, Product, Cart, WishList, ShippingAddress, Review #, Order, OrderItem, Payment
+from .models import User, Product, Cart, WishList, ShippingAddress, UserAddr, Review , Order#, OrderItem, Payment
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
@@ -70,7 +70,6 @@ def signup(request):
             last_name=last_name, password=password_hash, phone=phone, is_verified=False, 
             created_dtm=current_timestamp, modified_dtm=current_timestamp, role = role
         )
-        user.save()
 
         send_mail(
             'OTP Verification',
@@ -82,7 +81,6 @@ def signup(request):
         
         success = {'status': 'success', 'message': 'Signup successful! Please check your email for the OTP.'}
         return JsonResponse(success, status=200)
-
 
 
 def verify_otp(request):
@@ -114,8 +112,6 @@ def verify_otp(request):
             error = {'status': 'failure', 'message': 'User does not exist'}
             return JsonResponse(error, status=400)
     return JsonResponse(error, status=400)
-
-
 
 
 def regenerate_otp(request):
@@ -150,7 +146,6 @@ def regenerate_otp(request):
             return JsonResponse({'status' : 'Failure', 'message' : 'Invalid request'}, status=400)
 
 
-
 def reset_password(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -183,7 +178,6 @@ def reset_password(request):
             error = {'status': 'failure', 'message': 'OTP verification failure, enter valid OTP!!'}
             return JsonResponse(error, status=400)
     return JsonResponse({'status' : 'failure', 'message' : 'reset failed'}, status=400)
-
 
 
 def login(request):
@@ -234,45 +228,60 @@ def login(request):
 #     # This is a sample protected view that requires the user to be logged in
 #     return render(request, 'home.html')
 
-
 def delete_user(request):
     if request.method == "POST":
         email = request.POST['email']
         user = User.objects.filter(email=email).first()
+
         if user is not None:
             try:
+                user_addr = UserAddr.objects.filter(user_id=user.user_id).first()
+
+                if user_addr:
+                    shipping_addr = get_object_or_404(ShippingAddress, addr_id=user_addr.addr_id)
+
+                    orders_with_address = Order.objects.filter(addr=shipping_addr)
+
+                    if orders_with_address.exists():
+                        return JsonResponse({'status': 'Failure', 'message': 'Cannot delete user, associated orders exist.'}, status=400)
+                    
+                    user_addr.delete()
+                    shipping_addr.delete()
+
                 user.delete()
-                
-                success = {'status': 'Success','message':'User deleted successfully'}
-                return JsonResponse (success, status = 200)
+
+                success = {'status': 'Success', 'message': 'User deleted successfully'}
+                return JsonResponse(success, status=200)
             except Exception as e:
-                print (e)
-                error = {'status': 'Failure','message':'Check the details and try again'}
+                print(e)
+                error = {'status': 'Failure', 'message': 'Check the details and try again'}
                 return JsonResponse(error, status=400)
         else:
-            error = {'status' : 'Failure', 'message' : 'User not found'}
-            return JsonResponse(error, status = 400)
+            error = {'status': 'Failure', 'message': 'User not found'}
+            return JsonResponse(error, status=400)
 
 
 
 # Product section
 
-# def add_product(request):
-#     if request.method == "POST":
-#         product_name = request.POST['product_name']
-#         description = request.POST['description']
-#         price = request.POST['price']
-#         stock_quantity = request.POST['stock_quantity']
+def add_product(request):
+    if request.method == "POST":
+        product_name = request.POST['product_name']
+        description = request.POST['description']
+        price = request.POST['price']
+        stock_quantity = request.POST['stock_quantity']
 
-#         try:
-#             product = Product.objects.create(description= description, product_name= product_name, price=price, stock_quantity=stock_quantity)
+        product_id = uuid.uuid4()
 
-#             success = {'status': 'Success','message':'Product added successfully'}
-#             return JsonResponse (success, status = 200)
-#         except Exception as e:
-#             print (e)
-#             error = {'status': 'Failure','message':'Problem adding product'}
-#             return JsonResponse(error, status=400)
+        try:
+            product = Product.objects.create(description= description, product_name= product_name, price=price, stock_quantity=stock_quantity)
+
+            success = {'status': 'Success','message':'Product added successfully'}
+            return JsonResponse (success, status = 200)
+        except Exception as e:
+            print (e)
+            error = {'status': 'Failure','message':'Problem adding product'}
+            return JsonResponse(error, status=400)
 
 
 
@@ -303,7 +312,6 @@ def add_to_cart(request):
             print(e)
             error = {'status': 'Failure', 'message': 'Error adding to cart'}
             return JsonResponse(error, status = 400)
-
 
 
 def get_cart_items(request):
@@ -346,7 +354,6 @@ def get_cart_items(request):
         else:
             error = {'status': 'Failure', 'message': 'user_id is required'}
             return JsonResponse(error, status=400)
-
 
 
 def add_to_wishlist(request):
@@ -416,7 +423,6 @@ def get_wishlist_items(request):
             return JsonResponse(error, status=400)
 
 
-
 def move_to_cart(request):
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
@@ -456,8 +462,6 @@ def move_to_cart(request):
     else:
         error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
         return JsonResponse(error, status=405)
-
-
 
 
 def save_for_later(request):
@@ -500,7 +504,6 @@ def save_for_later(request):
         return JsonResponse(error, status=405)
 
 
-
 def delete_from_cart(request):
     if request.method=="POST":
         user_id = request.POST['user_id']
@@ -528,7 +531,6 @@ def delete_from_cart(request):
     else:
         error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
         return JsonResponse(error, status=405)
-
 
 
 def remove_from_wishlist(request):
@@ -561,10 +563,66 @@ def remove_from_wishlist(request):
 
 
 
+# Shipping address
+def shipping_addr(request):
+    if request.method == "POST":
+        user_id = request.POST.get('user_id')
+        name = request.POST.get('name')
+        address = request.POST.get('address')
+        city = request.POST.get('city')
+        state = request.POST.get('state')
+        postal_code = request.POST.get('postal_code')
+        phone = request.POST.get('phone')
 
-####### ADD ADDRESS
-########### ORDERS
-######### SAVE FOR LATER (CART TO WISHLIST)
+        user = get_object_or_404(User, user_id=user_id)
+
+        if not phone:
+            phone = user.phone
+
+        try:
+            shipping_address = ShippingAddress.objects.create(
+                name=name, address=address, city=city, state=state, phone=phone, postal_code=postal_code
+            )
+
+            addr_id = shipping_address.addr_id
+
+            UserAddr.objects.create(user=user, addr_id=addr_id)
+
+
+            success = {'status': 'Success', 'message': 'Shipping address added successfully'}
+            return JsonResponse(success, status=201)
+
+        except Exception as e:
+            print(e)
+            error = {'status': 'Failure', 'message': str(e)}
+            return JsonResponse(error, status=400)
+
+
+def delete_addr(request):
+    if request.method == "POST":
+        user_id = request.POST.get('user_id')
+        addr_id = request.POST.get('addr_id')
+        try:
+            shipping_address = get_object_or_404(ShippingAddress, addr_id=addr_id)
+
+            orders_with_address = Order.objects.filter(addr_id=shipping_address)
+
+            UserAddr.objects.filter(addr_id=addr_id).delete()
+
+            if orders_with_address.exists():
+                return JsonResponse({'status': 'Failure', 'message': 'Cannot delete address, associated orders exist.'}, status=400)
+            else:
+                shipping_address.delete()
+
+
+            return JsonResponse({'status': 'Success', 'message': 'Shipping address deleted successfully'}, status=204)
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'status': 'Failure', 'message': str(e)}, status=400)
+
+##########DELETE ADDRESS = deletes from user_addr and shipping-addr (if there are no orders sent to that address)
+########### ORDERS contains all shipping addr values in a single column called address, has user_id, user_name.
 ######### CHECKOUT
 
 

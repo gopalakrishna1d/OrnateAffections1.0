@@ -21,42 +21,52 @@ class User(models.Model):
 
 
 class ShippingAddress(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    addr_id = models.CharField(primary_key=True, max_length=10)
+    name = models.CharField(max_length=32)
     address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
     postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=100)
+
+    def save(self, *args, **kwargs):
+        if not self.addr_id:
+            highest_existing_address = ShippingAddress.objects.filter(addr_id__startswith='addr').order_by('-addr_id').first()
+
+            if highest_existing_address:
+                numeric_part = int(highest_existing_address.addr_id[4:]) + 1
+            else:
+                numeric_part = 1
+
+            self.addr_id = f'addr{str(numeric_part).zfill(3)}'
+
+        super(ShippingAddress, self).save(*args, **kwargs)
 
 
-class user_addr(models.Model):
+class UserAddr(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
-    Address=models.ForeignKey(ShippingAddress, on_delete=models.DO_NOTHING)
+    addr=models.ForeignKey(ShippingAddress, primary_key=True, on_delete=models.DO_NOTHING)
 
 
-# class Product(models.Model):
-#     product_name = models.CharField(max_length=255)
-#     description = models.TextField()
-#     price = models.DecimalField(max_digits=10, decimal_places=2)
-#     stock_quantity = models.IntegerField()
-    
-#     product_id = models.CharField(max_length=10, primary_key=True, unique=True)
+class Product(models.Model):
+    product_id = models.CharField(max_length=10, primary_key=True)
+    product_name = models.CharField(max_length=255)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock_quantity = models.IntegerField()
 
-#     def save(self, *args, **kwargs):
-#         if not self.product_id:
-#             last_product = Product.objects.order_by('-product_id').first()
-#             if last_product:
-#                 last_id = int(last_product.product_id.replace('prod', ''))
-#                 new_id = f'prod{str(last_id + 1).zfill(3)}'
-#             else:
-#                 new_id = 'prod001'
+    def save(self, *args, **kwargs):
+        if not self.product_id:
+            highest_existing_product = Product.objects.filter(product_id__startswith='prod').order_by('-product_id').first()
 
-#             self.product_id = new_id
+            if highest_existing_product:
+                numeric_part = int(highest_existing_product.product_id[4:]) + 1
+            else:
+                numeric_part = 1
 
-#         super().save(*args, **kwargs)
+            self.product_id = f'prod{str(numeric_part).zfill(3)}'
 
-#     def __str__(self):
-#         return self.product_id
+        super(Product, self).save(*args, **kwargs)
 
 
 
@@ -91,12 +101,16 @@ class Review(models.Model):
 
 
 
-# # Order model
-# class Order(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     order_date = models.DateTimeField(auto_now_add=True)
-#     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-#     order_status = models.CharField(max_length=20)
+# Order model
+class Order(models.Model):
+    order_id = models.CharField(max_length=20, primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_name = models.CharField(max_length=32)
+    addr = models.ForeignKey(ShippingAddress, on_delete=models.DO_NOTHING)
+    order_date = models.DateTimeField(auto_now_add=True)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    order_status = models.CharField(max_length=20)
+
 
 # # OrderItem model
 # class OrderItem(models.Model):
