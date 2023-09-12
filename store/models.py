@@ -93,7 +93,7 @@ class WishList(models.Model):
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    ordered_product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    ordered_product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
     rating = models.IntegerField()
     review_text = models.TextField()
     date_posted = models.DateTimeField(auto_now_add=True)
@@ -102,6 +102,7 @@ class Review(models.Model):
 
 
 # Order model
+###########if order deleted???????
 class Order(models.Model):
     order_id = models.CharField(max_length=20, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -111,26 +112,40 @@ class Order(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     order_status = models.CharField(max_length=20)
 
+    def save(self, *args, **kwargs):
+        if not self.order_id:
+            highest_existing_order = Order.objects.filter(order_id__startswith='order').order_by('-order_id').first()
 
-# # OrderItem model
-# class OrderItem(models.Model):
-#     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-#     quantity = models.IntegerField()
-#     subtotal_price = models.DecimalField(max_digits=10, decimal_places=2)
+            if highest_existing_order:
+                numeric_part = int(highest_existing_order.order_id[5:]) + 1
+            else:
+                numeric_part = 1
 
-# # Payment model
-# class Payment(models.Model):
-#     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-#     payment_date = models.DateTimeField(auto_now_add=True)
-#     payment_amount = models.DecimalField(max_digits=10, decimal_places=2)
-#     payment_method = models.CharField(max_length=50)
-#     payment_status = models.CharField(max_length=20)
+            self.order_id = f'order{str(numeric_part).zfill(3)}'
+
+        super(Order, self).save(*args, **kwargs)
+
+
+# OrderItem model
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    subtotal_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+# Payment model
+class Payment(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=50)
+    payment_status = models.CharField(max_length=20)
 
 # Admin model (if applicable)
-# class Admin(models.Model):
-#     username = models.CharField(max_length=255)
-#     password = models.CharField(max_length=255)
-#     email = models.EmailField()
-#     first_name = models.CharField(max_length=255)
-#     last_name = models.CharField(max_length=255)
+class Admin(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    email = models.EmailField(unique=True, primary_key=True)
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
