@@ -110,7 +110,7 @@ class Order(models.Model):
     addr = models.ForeignKey(ShippingAddress, on_delete=models.DO_NOTHING)
     order_date = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    order_status = models.CharField(max_length=20)
+    order_status = models.CharField(max_length=20, default='Cart', choices=[('Cart', 'Cart'), ('Order Placed', 'Order Placed'),('Out for delivery', 'Out for delivery'),('Delivered', 'Delivered')])
 
     def save(self, *args, **kwargs):
         if not self.order_id:

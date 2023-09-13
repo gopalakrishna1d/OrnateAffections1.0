@@ -45,48 +45,7 @@ def add_product(request):
 
 
 
-########### ORDERS contains all shipping addr values in a single column called address, has user_id, user_name.
-######### CHECKOUT
-######### PAYMENT
-######### PAYMENT confirmation
-######### Order Confirmation
-######### ORDER CANCEL
-######### DELETE ORDER
-######### REVIEW
-######### view orders
 
-######### ADMIN CONSOLE (admin required endpoints and pages)
-######### ADMIN LOGIN (If user exists in user and admin tables)
-######### ADD and manipulate product and other product related details but only read user and user data)
-
-
-
-
-
-
-# # Checkout View (simplified)
-# @login_required
-# def checkout(request):
-#     user = request.user
-#     cart = Order.objects.filter(user=user, order_status='Cart').first()
-
-#     if cart:
-#         # Calculate total price and handle payment processing here
-#         total_price = sum(item.subtotal_price for item in cart.orderitem_set.all())
-
-#         # Create a new order with the 'Pending' status
-#         order = Order.objects.create(user=user, total_price=total_price, order_status='Pending')
-
-#         # Copy items from the cart to the new order
-#         for item in cart.orderitem_set.all():
-#             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, subtotal_price=item.subtotal_price)
-
-#         # Clear the cart
-#         cart.delete()
-
-#         return redirect('order_confirmation')
-
-#     return redirect('cart')
 
 # # Order Confirmation View
 # @login_required
