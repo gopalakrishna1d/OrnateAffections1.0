@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from django.contrib.auth.decorators import login_required
-from ..models import User, Product, Cart, WishList, ShippingAddress, UserAddr, Review , Order, OrderItem, Payment
+from ..models import User, Product, Cart, ShippingAddress, UserAddr, Review , Order, OrderItem, Payment
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
@@ -30,29 +30,45 @@ import re
 def checkout(request):
     user_id = request.POST.get('user_id')
     product_id = request.POST.get('product_id')
-    cart = Cart.objects.filter(user_id=user_id, product_id= product_id).first()
+    cart = Cart.objects.filter(user_id=user_id, product_id=product_id).first()
+
     if cart:
+        user = get_object_or_404(User, user_id=user_id)
         quantity = cart.quantity
 
         product = get_object_or_404(Product, product_id=product_id)
         price = product.price
 
-        total_price= (price * quantity)
+        total_price = (price * quantity)
 
-        order = Order.objects.create(user=user_id, total_price=total_price, order_status='Cart')
+        user_address = get_object_or_404(UserAddr, user=user)
+        shipping_address = user_address.addr
+
+        # Create the order with the user's default shipping address
+        order = Order.objects.create(
+            user=user,
+            user_name=user.user_name,
+            addr=shipping_address,
+            total_price=total_price,
+            order_status='Cart'
+        )
 
         for item in cart.orderitem_set.all():
-            OrderItem.objects.create(order=order, product=product_id, quantity=quantity, subtotal_price=price)
+            # Create order items for the order
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                subtotal_price=item.subtotal_price
+            )
 
-        cart.delete()
+        return JsonResponse({'status': 'Success', 'message': 'Order success, Payment pending'}, status=200)
 
-        return JsonResponse({'status': 'Success', 'message': 'Order success, Payment pending'}, status = 200)
-    
-    return JsonResponse({'status': 'Failure', 'message': 'Order failure, try again'}, status = 400)
+    return JsonResponse({'status': 'Failure', 'message': 'Order failure, try again'}, status=400)
+
     #     return redirect('order_confirmation')
 
     # return redirect('cart') 
-
 
 
 

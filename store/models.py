@@ -92,12 +92,12 @@ class WishList(models.Model):
 
 
 # Order model
-###########if order deleted???????
+#######if order deleted???
 class Order(models.Model):
     order_id = models.CharField(max_length=20, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     user_name = models.CharField(max_length=32)
-    addr = models.ForeignKey(ShippingAddress, on_delete=models.DO_NOTHING)
+    addr = models.ForeignKey(ShippingAddress, on_delete=models.DO_NOTHING, null=True)
     order_date = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     order_status = models.CharField(max_length=20, default='Cart', choices=[('Cart', 'Cart'), ('Order Placed', 'Order Placed'),('Out for delivery', 'Out for delivery'),('Delivered', 'Delivered')])
