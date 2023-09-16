@@ -91,16 +91,6 @@ class WishList(models.Model):
 #     category_name = models.CharField(max_length=255)
 
 
-class Review(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    ordered_product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-    rating = models.IntegerField()
-    review_text = models.TextField()
-    date_posted = models.DateTimeField(auto_now_add=True)
-
-
-
-
 # Order model
 ###########if order deleted???????
 class Order(models.Model):
@@ -140,6 +130,14 @@ class Payment(models.Model):
     payment_amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=50)
     payment_status = models.CharField(max_length=20)
+
+
+class Review(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ordered_product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    rating = models.IntegerField()
+    review_text = models.TextField()
+    date_posted = models.DateTimeField(auto_now_add=True)
 
 # Admin model (if applicable)
 class Admin(models.Model):
