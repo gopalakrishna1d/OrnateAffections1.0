@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
 from django.core.mail import send_mail
+from django.contrib.sessions.models import Session
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
@@ -78,13 +79,20 @@ def signup(request):
         )
         
         success = {'status': 'success', 'message': 'Signup successful! Please check your email for the OTP.'}
-        return JsonResponse(success, status=200)
+        
+        request.session['signup_email'] = email
+        return render(request, 'verify_otp.html')
+    
+    return render(request, 'signup.html')
+        # return JsonResponse(success, status=200)
 
 
 def verify_otp(request):
     if request.method == 'POST':
         otp = request.POST['otp']
-        email = request.POST['email']
+
+        email = request.session.get('signup_email', '')
+
         user = User.objects.filter(email =email).first()
         if user is not None:
             try:
@@ -97,11 +105,11 @@ def verify_otp(request):
                     user.is_verified = True
                     user.save()
                     
-                    success = {'status': 'success', 'message': 'OTP verification successful'}
-                    return JsonResponse(success, status=200)
+                    # success = {'status': 'success', 'message': 'OTP verification successful'}
+                    return render(request, 'login.html')
                 else:
                     error = {'status': 'failure', 'message': 'OTP verification failure, enter valid OTP'}
-                    return JsonResponse(error, status=400)
+                    return render(request, error, 'verify_otp.html')
 
             except ObjectDoesNotExist:
                 error = {'status': 'failure', 'message': 'User does not exist'}

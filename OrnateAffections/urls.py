@@ -10,6 +10,7 @@ import store.views.views_address as addr_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    path('', user_auth_views.signup, name= 'signup'),
     path('signup/', user_auth_views.signup, name= 'signup'),
     path('regenerate_ornate_af_otp/', user_auth_views.regenerate_otp, name= 'regenerate_otp'),
     path('verify_ornate_af_otp/', user_auth_views.verify_otp, name='verify_otp'),
