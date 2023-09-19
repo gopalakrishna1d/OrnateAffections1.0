@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
-from django.contrib.auth.decorators import login_required
+from .views_user_auth import login
 from ..models import User, Product, Cart, WishList # ShippingAddress, UserAddr, Review , Order#, OrderItem, Payment
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password, make_password
@@ -18,6 +18,8 @@ def add_to_cart(request):
 
             if int(quantity) <= product.stock_quantity:
                 Cart.objects.create(user=user, product=product, quantity=quantity)
+
+                login(request, user)
                 success = {'status': 'Success', 'message': 'Successfully added to cart'}
                 return JsonResponse(success, status=200)
             else:
@@ -40,22 +42,7 @@ def add_to_cart(request):
     else:
         error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
         return JsonResponse(error, status=405)
-# # Add to Cart View (simplified)
-# @login_required
-# def add_to_cart(request, product_id):
-#     product = get_object_or_404(Product, pk=product_id)
 
-#     # Create or retrieve the user's active order (cart)
-#     user = request.user
-#     order, created = Order.objects.get_or_create(user=user, order_status='Cart')
-
-#     # Check if the product is already in the cart; if so, update quantity
-#     order_item, item_created = OrderItem.objects.get_or_create(order=order, product=product)
-#     if not item_created:
-#         order_item.quantity += 1
-#         order_item.save()
-
-#     return redirect('cart')
 
 def get_cart_items(request):
     if request.method == 'POST':
@@ -63,6 +50,8 @@ def get_cart_items(request):
         if user_id is not None:
             try:
                 carts = get_list_or_404(Cart, user_id=user_id)
+                
+                login(request, user_id)
                 cart_data = []
 
                 for cart in carts:
@@ -124,8 +113,7 @@ def add_to_wishlist(request):
             error = {'status': 'Failure', 'message': 'Error adding to wishlist'}
             return JsonResponse(error, status = 400)
 # # Cart View
-# @login_required
-# def cart(request):
+# # def cart(request):
 #     user = request.user
 #     cart = Order.objects.filter(user=user, order_status='Cart').first()
 #     return render(request, 'cart.html', {'cart': cart})

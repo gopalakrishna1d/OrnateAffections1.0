@@ -24,6 +24,7 @@ SECRET_KEY = 'django-insecure-+rwqcdc5v&kc+prm8q2^8j59+7qvj0yf1ufk8an^yg7#=3dm!i
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+######################## You’re seeing this error because you have DEBUG = True in your Django settings file. Change that to False, and Django will display a standard 404 page.
 
 ALLOWED_HOSTS = []
 

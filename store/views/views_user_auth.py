@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.sessions.models import Session
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 import random
@@ -122,14 +122,14 @@ def verify_otp(request):
 
 def regenerate_otp(request):
     if request.method == 'POST':
-        email = request.POST['email'].lower()
+        email = request.session.get('signup_email', '')
 
         try:
             user = User.objects.get(email=email)
 
             new_otp = str(random.randint(100000, 999999))
             user.otp = new_otp
-            user.otp_expiration = timezone.now()+timedelta(minutes=1)
+            user.otp_expiration = timezone.now()+timedelta(minutes=5)
             user.save()
 
             send_mail(
@@ -144,13 +144,16 @@ def regenerate_otp(request):
                 'message' : 'New OTP generated',
                 'new_otp' : new_otp
             }
-            return JsonResponse(response,status=200)
+            # return JsonResponse(response,status=200)
+            return render(request, 'verify_otp.html', context=response) 
         except User.DoesNotExist:
             error = {'status' : 'failure', 'message' : 'User not found'}
             return JsonResponse(error, status=400)
         except Exception as e:
             return JsonResponse({'status' : 'Failure', 'message' : 'Invalid request'}, status=400)
+    return render(request, 'verify_otp.html')
 
+############## Get a message in the verify otp page that otp has been sent
 
 def reset_password(request):
     if request.method == 'POST':
@@ -199,41 +202,40 @@ def login(request):
         if user is not None:
             if user.is_verified:
                 if check_password(password, user.password):
-                    user_details = {
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'email': user.email.lower(),
-                    'phone': user.phone,
-                    'user_id': user.user_id
-                }
                     success = {
                             'status': 'success',
-                            'message': f'Successfully logged in as {email}',
-                            'data': user_details
+                            'message': f'Successfully logged in as {email}'
                         } # Redirect to the homepage after successful login
-                    return JsonResponse (success, status = 200)
+                    request.session['user_id']= user.email
+                    return render (request, 'home.html')
                 else:
-                    error = {
-                    'status': 'failure',
-                    'message': 'Login failure, check the entered details and if the user is valid'
-                }
-                return JsonResponse(error, status=400)
+                    return render(request, 'login.html')
 
             else:
                 failure = {
                         'status': 'failure',
                         'message': 'User not verified. Try OTP verification'
                     }
+                return render(request, 'login.html')
                 return JsonResponse (failure, status = 400)
 
     error = {'status': 'failure', 'message': 'Unable to login', 'data': {}}
+    return render(request, 'login.html')
     return JsonResponse(error, status=400) #return render(request, 'login.html')
+
+
+def logout(request):
+    # Clear session variables to log the user out
+    request.session.clear()
+
 
 # @login_required
 # def home(request):
 #     # This is a sample protected view that requires the user to be logged in
 #     return render(request, 'home.html')
 
+
+@login_required
 def delete_user(request):
     if request.method == "POST":
         email = request.POST['email']
@@ -264,4 +266,9 @@ def delete_user(request):
                 return JsonResponse(error, status=400)
         else:
             error = {'status': 'Failure', 'message': 'User not found'}
-            return JsonResponse(error, status=400)
+
+
+
+
+
+######## User-Settings page and options in the settings page
