@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from ..models import User, ShippingAddress, UserAddr, Order, Admin # OrderItem, Payment
 from django.core.exceptions import ObjectDoesNotExist
@@ -16,22 +17,33 @@ import re
 def signup(request):
     if request.method == 'POST':
         email = request.POST['email'].lower()
-        username = request.POST['username']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
+        full_name = request.POST['full_name']
         phone = request.POST['phone']
         password = request.POST['password']
-        role =  request.POST['role']
+        role =  request.POST.get('role', 'customer')
 
-        if not first_name or not last_name or not phone or not email or not password:
+        name_parts = full_name.split()
+
+        if len(name_parts) == 1:
+            first_name = name_parts[0]
+            middle_name = ""
+            last_name = ""
+
+        elif len(name_parts) == 2:
+            first_name = name_parts[0]
+            middle_name = ""
+            last_name = name_parts[1]
+
+        else:
+            first_name = name_parts[0]
+            middle_name = " ".join(name_parts[1:-1])
+            last_name = name_parts[1]
+        
+        username = request.POST.get('username', first_name)
+
+        if not first_name or not phone or not email or not password:
             error = {'status': 'failure', 'message': 'Please fill in all the required fields'}
             return JsonResponse(error, status=400)
-        
-        if not username:
-            username = first_name
-
-        if role is None:
-            role = 'Customer'
 
         if len(password) < 8:
             error = {'status': 'failure', 'message': 'Password should be at least 8 characters long'}
@@ -39,10 +51,6 @@ def signup(request):
 
         if not re.match(r'^[A-Za-z]{2,}$', first_name):
             error = {'status': 'failure', 'message': 'Invalid first name'}
-            return JsonResponse(error, status=400)
-
-        if not re.match(r'^[A-Za-z]{2,}$', last_name):
-            error = {'status': 'failure', 'message': 'Invalid last name'}
             return JsonResponse(error, status=400)
 
         if not re.match(r'^\d{10}$', phone):
@@ -62,8 +70,8 @@ def signup(request):
         current_timestamp = timezone.now()
 
         user = User.objects.create(
-            user_id= user_id, username = username, email=email, otp=otp, otp_expiration=otp_expiration, first_name=first_name,
-            last_name=last_name, password=password_hash, phone=phone, is_verified=False, 
+            user_id= user_id, username = username, email=email, otp=otp, otp_expiration=otp_expiration, first_name=first_name, 
+            middle_name=middle_name, last_name=last_name, password=password_hash, phone=phone, is_verified=False, 
             created_dtm=current_timestamp, modified_dtm=current_timestamp, role = role
         )
 
@@ -76,15 +84,14 @@ def signup(request):
             settings.EMAIL_HOST_USER,
             [email],
             fail_silently=False,
-        )
-        
-        success = {'status': 'success', 'message': 'Signup successful! Please check your email for the OTP.'}
-        
+        )        
         request.session['signup_email'] = email
+        # request.session['signup_password'] = password
+        
+        # return redirect ('login')
         return render(request, 'verify_otp.html')
     
     return render(request, 'signup.html')
-        # return JsonResponse(success, status=200)
 
 
 def verify_otp(request):
@@ -117,11 +124,11 @@ def verify_otp(request):
         else:
             error = {'status': 'failure', 'message': 'User does not exist'}
             return JsonResponse(error, status=400)
-    return JsonResponse(error, status=400)
+            return JsonResponse(error, status=400)
 
 
 def regenerate_otp(request):
-    if request.method == 'POST':
+    if request.method == 'GET':
         email = request.session.get('signup_email', '')
 
         try:
@@ -139,57 +146,32 @@ def regenerate_otp(request):
                 [email],
                 fail_silently=False,
             )
-            response = {
-                'status' : 'success',
-                'message' : 'New OTP generated',
-                'new_otp' : new_otp
-            }
+            response = { 'status' : 'success', 'message' : 'New OTP generated. Please check your email'}
             # return JsonResponse(response,status=200)
             return render(request, 'verify_otp.html', context=response) 
         except User.DoesNotExist:
             error = {'status' : 'failure', 'message' : 'User not found'}
             return JsonResponse(error, status=400)
         except Exception as e:
-            return JsonResponse({'status' : 'Failure', 'message' : 'Invalid request'}, status=400)
+            return JsonResponse({'status' : 'Failure', 'message' : str(e)}, status=400)
     return render(request, 'verify_otp.html')
 
-############## Get a message in the verify otp page that otp has been sent
 
-def reset_password(request):
-    if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-        confirm_password = request.POST['confirm_password']
-        otp = request.POST['otp']
-        
-        password_hash = make_password(password)
-
-        if password != confirm_password:
-                error = {'status': 'failure', 'message': 'Passwords do not match'}
-                return JsonResponse(error, status=400)
-        
-        user = User.objects.filter(email = email).first()
-
-        if user.otp == otp:
-            #Check if OTP has expired
-            current_time = timezone.now()
-            if user.otp_expiration < current_time:
-                error = {'status': 'failure', 'message': 'OTP has expired'}
-                return JsonResponse(error, status=400)
-            user.is_verified = True
-            user.password = password_hash 
-            user.save()
-                
-            success = {'status': 'success', 'message': 'OTP verified, password reset successful!!'}
-            return JsonResponse(success, status=200)
-            
-        elif ObjectDoesNotExist:
-            error = {'status': 'failure', 'message': 'OTP verification failure, enter valid OTP!!'}
-            return JsonResponse(error, status=400)
-    return JsonResponse({'status' : 'failure', 'message' : 'reset failed'}, status=400)
-
+########### Direct home page after signup (no need to login)
+########### Unverified users login is different from verified login (can add to cart but need verification to checkout)
+    
+                    
 
 def login(request):
+    def login_anyways():
+        if check_password(password, user.password):
+            request.session['email_id']= user.email
+            request.session['user_id'] = str(user.user_id)
+            return render (request, 'home.html', context=success)
+        else:
+            failure = {'message': 'Check your Password'}
+            return render(request, 'login.html', context=failure)
+        
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
@@ -197,36 +179,60 @@ def login(request):
             user = User.objects.get(email=email.strip())
         except User.DoesNotExist:
             error = {'status': 'failure', 'message': 'User does not exist'}
-            return JsonResponse(error, status=400)
+            return render(request, 'login.html', context=error)
         
         if user is not None:
             if user.is_verified:
-                if check_password(password, user.password):
-                    success = {
-                            'status': 'success',
-                            'message': f'Successfully logged in as {email}'
-                        } # Redirect to the homepage after successful login
-                    request.session['user_id']= user.email
-                    return render (request, 'home.html')
-                else:
-                    return render(request, 'login.html')
-
+                success = {'status': 'success', 'message': f'Successfully logged in as {email}'}
+                return login_anyways()
             else:
-                failure = {
-                        'status': 'failure',
-                        'message': 'User not verified. Try OTP verification'
-                    }
-                return render(request, 'login.html')
-                return JsonResponse (failure, status = 400)
-
-    error = {'status': 'failure', 'message': 'Unable to login', 'data': {}}
-    return render(request, 'login.html')
-    return JsonResponse(error, status=400) #return render(request, 'login.html')
+                success = {'message': "Please enter otp and verify your email"}
+                return login_anyways()
+            
+        error = {'status': 'failure', 'message': 'User does not exist'}
+        return render(request, 'login.html', context=error)
+    
+    error = {'status': 'failure', 'message': 'Unable to login'}
+    return render(request, 'login.html', context=error)
 
 
-def logout(request):
-    # Clear session variables to log the user out
-    request.session.clear()
+def reset_password(request):
+    if request.method == 'POST':
+        email = request.session.get('email_id', '')
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+        otp = request.POST['otp']
+
+        if password != confirm_password:
+            error = {'status': 'failure', 'message': 'Passwords do not match'}
+            return JsonResponse(error, status=400)
+    
+        password_hash = make_password(password)
+        
+        try:
+            user = User.objects.filter(email = email).first()
+        except User.DoesNotExist:
+            error = {'status':'failure', 'message': 'User not found'}
+            return JsonResponse(error, status=404)
+
+        if user.otp == otp:
+            current_time = timezone.now()
+            if user.otp_expiration < current_time:
+                error = {'status': 'failure', 'message': 'OTP has expired'}
+                return JsonResponse(error, status=400)
+            user.is_verified = True
+            user.password = password_hash 
+            user.save()
+            return redirect('logout')
+        
+            # success = {'status': 'success', 'message': 'OTP verified, password reset successful!!'}
+            # return JsonResponse(success, status=200)
+            
+        else:
+            error = {'status': 'failure', 'message': 'OTP verification failure, enter valid OTP!!'}
+            return JsonResponse(error, status=400)
+    return JsonResponse({'status' : 'failure', 'message' : 'reset failed'}, status=400)
+
 
 
 # @login_required
@@ -235,10 +241,9 @@ def logout(request):
 #     return render(request, 'home.html')
 
 
-@login_required
 def delete_user(request):
     if request.method == "POST":
-        email = request.POST['email']
+        email = request.session.get('email_id', '')
         user = User.objects.filter(email=email).first()
 
         if user is not None:
@@ -266,9 +271,15 @@ def delete_user(request):
                 return JsonResponse(error, status=400)
         else:
             error = {'status': 'Failure', 'message': 'User not found'}
-
-
-
-
-
+            
+            
+            
+            
+########## HTML page for confirm user delete
 ######## User-Settings page and options in the settings page
+
+def logout(request):
+    # Clear session variables to log the user out
+    message = "You have been logged out successfully"
+    request.session.clear()
+    return render (request, 'login.html')

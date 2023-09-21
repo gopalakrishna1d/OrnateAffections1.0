@@ -45,11 +45,23 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+# Session Engine
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Session Cookie Age (adjust as needed)
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+
+# Session Cookie Name (optional, but can be helpful)
+SESSION_COOKIE_NAME = 'ora_sessions'
+
+
 
 ROOT_URLCONF = 'OrnateAffections.urls'
 

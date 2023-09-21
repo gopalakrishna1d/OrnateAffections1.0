@@ -16,6 +16,7 @@ urlpatterns = [
     path('verify_ornate_af_otp/', user_auth_views.verify_otp, name='verify_otp'),
     path('reset_password/', user_auth_views.reset_password, name= 'reset_password'),
     path('login/', user_auth_views.login, name='login'),
+    path('logout/', user_auth_views.logout, name='logout'),
     path('delete_ornate_af_user/', user_auth_views.delete_user, name='delete_user'),
 
     path('add_product/', prod_views.add_product, name='add_product'),

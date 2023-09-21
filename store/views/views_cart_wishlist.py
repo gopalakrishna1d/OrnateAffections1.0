@@ -6,9 +6,14 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
 from django.http import JsonResponse
 
+
+############## user verification must be checked for all the actions and prompt them to verify using otp in settings or something.
+
+
+
 def add_to_cart(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
+        user_id = request.session.get('user_id', '')
         product_id = request.POST.get('product_id')
         quantity = request.POST.get('quantity')
 
@@ -46,14 +51,12 @@ def add_to_cart(request):
 
 def get_cart_items(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
+        user_id = request.session.get('user_id', '')
         if user_id is not None:
             try:
                 carts = get_list_or_404(Cart, user_id=user_id)
                 
-                login(request, user_id)
                 cart_data = []
-
                 for cart in carts:
                     product = get_object_or_404(Product, product_id=cart.product_id)
 
@@ -90,7 +93,7 @@ def get_cart_items(request):
 
 def add_to_wishlist(request):
     if request.method == 'POST':
-        user_id = request.POST['user_id']
+        user_id = request.session.get('user_id', '')
         product_id = request.POST['product_id']
 
         try:
@@ -121,7 +124,7 @@ def add_to_wishlist(request):
 
 def get_wishlist_items(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
+        user_id = request.session.get('user_id', '')
         if user_id is not None:
             try:
                 wishlist = get_list_or_404(WishList, user_id=user_id)
@@ -162,7 +165,7 @@ def get_wishlist_items(request):
 
 def move_to_cart(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
+        user_id = request.session.get('user_id', '')
         product_id = request.POST.get('product_id')
 
         if user_id is not None and product_id is not None:
@@ -203,7 +206,7 @@ def move_to_cart(request):
 
 def save_for_later(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
+        user_id = request.session.get('user_id', '')
         product_id = request.POST.get('product_id')
 
         if user_id is not None and product_id is not None:
@@ -243,7 +246,7 @@ def save_for_later(request):
 
 def delete_from_cart(request):
     if request.method=="POST":
-        user_id = request.POST['user_id']
+        user_id = request.session.get('user_id', '')
         product_id = request.POST['product_id']
         if user_id is not None and product_id is not None:
             try:
@@ -272,7 +275,7 @@ def delete_from_cart(request):
 
 def remove_from_wishlist(request):
     if request.method=="POST":
-        user_id = request.POST['user_id']
+        user_id = request.session.get('user_id', '')
         product_id = request.POST['product_id']
         if user_id is not None and product_id is not None:
             try:
