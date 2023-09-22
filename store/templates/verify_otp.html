@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Successful</title>
+    <title>OTP Verification</title>
 </head>
 <body>
-    <h1>Registration Successful</h1>
+    <h1>OTP Verification</h1>
     <form method="POST" action="{% url 'verify_otp' %}">
         {% csrf_token %}
-        <p>{{ message }}</p>
+        <p>{{ message }}</p><br>
+
         <h2> Enter OTP </h2>
         <label for="otp">OTP:</label>
         <input type="text" name="otp" required><br><br>
@@ -17,6 +18,5 @@
         <button type="submit">Verify OTP</button>
 
         <a href ='/regenerate_ornate_af_otp/'> Regenerate OTP?</a>
-    <!-- You can provide links or buttons for the user to navigate to other pages, e.g., a login page. -->
 </body>
 </html>

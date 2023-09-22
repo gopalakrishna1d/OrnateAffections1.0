@@ -9,6 +9,7 @@
     <h1>Signup</h1>
     <form method="POST" action="{% url 'signup' %}">
         {% csrf_token %}
+        <h3>{{message}}</h3><br><br>
         <label for="email">Email:</label>
         <input type="email" name="email" required><br><br>
 
@@ -21,13 +22,8 @@
         <label for="password">Password:</label>
         <input type="password" name="password" required><br><br>
 
-        <!-- <label for="role">Role:</label>
-        <select name="role">
-            <option value="Customer">Customer</option>
-            <option value="Admin">Admin</option>
-        </select><br><br> -->
-
         <button type="submit">Signup</button>
     </form>
+    <p>Or <a href="/login/">login</a></p>
 </body>
 </html>
