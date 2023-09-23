@@ -9,6 +9,37 @@ from django.http import JsonResponse
 
 ############## user verification must be checked for all the actions and prompt them to verify using otp in settings or something.
 
+########### Unverified users login is different from verified login (can add to cart but need verification to checkout)
+# def reset_password(request, purpose):
+#     if request.method == 'POST':
+#         if purpose == 'logged_in':
+#             # Get the logged-in user
+#             user = request.user
+#             password = request.POST['password']
+#             confirm_password = request.POST['confirm_password']
+
+#             if password != confirm_password:
+#                 error = {'message': 'Passwords do not match'}
+#                 return render(request, 'reset_password.html', context=error)
+
+#             # Update the user's password
+#             user.set_password(password)
+#             user.save()
+
+#             # Redirect the user to a success page or their profile page, for example
+#             return redirect('profile')  # Change 'profile' to the appropriate URL name
+
+#         # Handle other purposes here, e.g., 'forgot_password'
+#         elif purpose == 'forgot_password':
+#             # Generate and send an OTP via email
+#             # ... (Your OTP generation and email sending logic)
+#             return render(request, 'otp_sent.html')  # Show a page indicating OTP sent
+#         else:
+#             # Handle invalid purpose
+#             return HttpResponseBadRequest('Invalid purpose')
+
+#     # Render the reset password form for GET requests
+#     return render(request, 'reset_password.html')
 
 
 def add_to_cart(request):

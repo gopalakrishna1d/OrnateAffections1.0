@@ -90,7 +90,7 @@ WSGI_APPLICATION = 'OrnateAffections.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ornate_backend',
+        'NAME': 'ornate_backend2',
         'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',

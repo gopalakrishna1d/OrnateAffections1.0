@@ -12,6 +12,7 @@ from datetime import timedelta
 import random
 import uuid
 import re
+###########Add country code to the phone number
 
 def signup(request):
     if request.method == 'POST':
@@ -112,7 +113,7 @@ def signup(request):
 def verify_otp(request):
     if request.method == 'POST':
         otp = request.POST['otp']
-        email = request.session.get('signup_email', 'login_email')
+        email = request.session.get('login_email', '')
 
         user = User.objects.filter(email=email).first()
         if user is not None:
@@ -142,36 +143,32 @@ def verify_otp(request):
         return render(request, 'verify_otp.html')
 
 
-def regenerate_otp(request):
-    if request.method == 'GET':
-        email = request.session.get('login_email')
+# def regenerate_otp(request):
+#     if request.method == 'GET':
+#         email = request.session.get('login_email')
 
-        try:
-            user = User.objects.get(email=email)
+#         try:
+#             user = User.objects.get(email=email)
 
-            new_otp = str(random.randint(100000, 999999))
-            user.otp = new_otp
-            user.otp_expiration = timezone.now()+timedelta(minutes=5)
-            user.save()
+#             new_otp = str(random.randint(100000, 999999))
+#             user.otp = new_otp
+#             user.otp_expiration = timezone.now()+timedelta(minutes=5)
+#             user.save()
 
-            send_mail(
-                'OTP Verification',
-                f'Greetings, your new OTP for your Ornate Affections account is: {new_otp} (valid only for 5 mins)',
-                settings.EMAIL_HOST_USER,
-                [email],
-                fail_silently=False,
-            )
-            response = {'message' : 'New OTP generated. Please check your email'}
-            return render(request, 'verify_otp.html', context=response) 
-        except Exception as e:
-            error = {'message' : str(e)}
-            return render(request, 'verify_otp.html', context=error)
-    else:
-        return render(request, 'verify_otp.html')
-
-
-########### Unverified users login is different from verified login (can add to cart but need verification to checkout)
-                    
+#             send_mail(
+#                 'OTP Verification',
+#                 f'Greetings, your new OTP for your Ornate Affections account is: {new_otp} (valid only for 5 mins)',
+#                 settings.EMAIL_HOST_USER,
+#                 [email],
+#                 fail_silently=False,
+#             )
+#             response = {'message' : 'New OTP generated. Please check your email'}
+#             return render(request, 'verify_otp.html', context=response) 
+#         except Exception as e:
+#             error = {'message' : str(e)}
+#             return render(request, 'verify_otp.html', context=error)
+#     else:
+#         return render(request, 'verify_otp.html')
 
 def login(request):
     def login_anyways():
@@ -206,40 +203,59 @@ def login(request):
     return render(request, 'login.html')
 
 
-def reset_password(request):
+def reset_password(request, purpose):
     if request.method == 'POST':
-        email = request.session.get('signup_email', 'login_email')
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
-        otp = request.POST['otp']
 
-        if password != confirm_password:
-            error = {'message': 'Passwords do not match'}
-            return render(request, 'reset_password.html', context=error)
+        if purpose == 'logged_in':
+            email = request.session.get('login_email')
+            previous_password = request.POST['previous_password']
+
+            try:
+                user = User.objects.filter(email = email).first()
+            except User.DoesNotExist:
+                error = {'message': 'User not found'}
+                return render(request, 'reset_password.html', context=error)
+
+            if password != confirm_password:
+                error = {'message': 'New Passwords do not match'}
+                return render(request, 'reset_password.html', context=error)
     
-        password_hash = make_password(password)
-        
-        try:
-            user = User.objects.filter(email = email).first()
-        except User.DoesNotExist:
-            error = {'message': 'User not found'}
-            return render(request, 'reset_password.html', context=error)
-        
-        if user.otp == otp:
-            current_time = timezone.now()
-            if user.otp_expiration < current_time:
-                error = {'status': 'failure', 'message': 'OTP has expired'}
+            if check_password(previous_password, user.password):
+                password_hash = make_password(password)
+                user.password = password_hash 
+                user.save()
+
+            else:
+                failure = {'message': 'Check your previous password'}
+                return render(request, 'reset_password.html', context=failure)           
+            
+        if purpose == 'forgot_password':
+            email = request.POST['email']
+            otp = request.POST['otp']
+            
+            try:
+                user = User.objects.filter(email = email).first()
+            except User.DoesNotExist:
+                error = {'message': 'User not found'}
+                return render(request, 'reset_password.html', context=error)
+
+            if user.otp == otp:
+                current_time = timezone.now()
+                if user.otp_expiration < current_time:
+                    error = {'status': 'failure', 'message': 'OTP has expired'}
+                    return JsonResponse(error, status=400)
+                user.is_verified = True
+                user.password = password_hash 
+                user.save()
+                return redirect('logout')
+            
+                success = {'status': 'success', 'message': 'OTP verified, password reset successful!!'}
+                return JsonResponse(success, status=200)
+            else:
+                error = {'status': 'failure', 'message': 'OTP verification failure, enter valid OTP!!'}
                 return JsonResponse(error, status=400)
-            user.is_verified = True
-            user.password = password_hash 
-            user.save()
-            return redirect('logout')
-        
-            success = {'status': 'success', 'message': 'OTP verified, password reset successful!!'}
-            return JsonResponse(success, status=200)
-        else:
-            error = {'status': 'failure', 'message': 'OTP verification failure, enter valid OTP!!'}
-            return JsonResponse(error, status=400)
         
     else :
         return render(request, 'reset_password.html')
