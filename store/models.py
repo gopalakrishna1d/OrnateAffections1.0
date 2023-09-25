@@ -46,7 +46,7 @@ class ShippingAddress(models.Model):
 
 class UserAddr(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
-    addr=models.ForeignKey(ShippingAddress, primary_key=True, on_delete=models.DO_NOTHING)
+    addr=models.OneToOneField(ShippingAddress, primary_key=True, on_delete=models.DO_NOTHING)
 
 
 class Product(models.Model):

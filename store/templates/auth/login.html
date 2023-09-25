@@ -3,7 +3,7 @@
 <head>
     <title>Login</title>
 </head>
-<body>
+<body align="center">
     <h1>Login</h1>
     <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
@@ -14,7 +14,8 @@
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required><br>
 
-        <button type="submit">Login</button>
+        <button type="submit">Login</button><br>
+        <a href="/forgoten_password/" target="_blank">Forgot password?</a>
     </form>
 </body>
 </html>

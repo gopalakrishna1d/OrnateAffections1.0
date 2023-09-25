@@ -3,7 +3,7 @@
 <head>
     <title>Home</title>
 </head>
-<body>
+<body align="center">
     <h1>Home</h1>
         {% csrf_token %}
         <p>{{message}}</p><br>
@@ -19,7 +19,7 @@
 
         <a href ="/settings/">Settings</a><br>
         <a href ="/verify_ornate_af_otp/" target="_blank">Verify OTP</a><br>
-        <a href="/reset_password/">Reset Password</a><br>
+        <a href="/reset_password/logged_in/">Reset Password</a><br>
         <a href="/logout/">LOGOUT</a>
     </form>
 </body>
