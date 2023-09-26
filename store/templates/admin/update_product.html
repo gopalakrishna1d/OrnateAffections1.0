@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Product</title>
+</head>
+<body align="center">
+    <h1>Update Product Details</h1>
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <label for="product_id">Product ID:</label>
+        <input type="text" id="product_id" name="product_id" required><br>
+
+        <label for="product_name">Product Name:</label>
+        <input type="text" id="product_name" name="product_name"><br>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description"></textarea><br>
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" value="{{ decimal_number }}"><br>
+
+        <label for="stock_quantity">Stock Quantity:</label>
+        <input type="number" id="stock_quantity" name="stock_quantity"><br>
+
+        <button type="submit">Update Product</button>
+    </form>
+</body>
+</html>

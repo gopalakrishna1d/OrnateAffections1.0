@@ -50,8 +50,8 @@ def signup(request):
             error = {'status': 'failure', 'message': 'Password should be at least 8 characters long'}
             return JsonResponse(error, status=400)
 
-        if not re.match(r'^[A-Za-z]{2,}$', first_name):
-            error = {'status': 'failure', 'message': 'Invalid first name'}
+        if not re.match(r'^[A-Za-z]{2,}$', full_name):
+            error = {'status': 'failure', 'message': 'Invalid fullname'}
             return JsonResponse(error, status=400)
 
         if not re.match(r'^\d{10}$', phone):
@@ -100,7 +100,7 @@ def signup(request):
                     request.session['login_email']= user.email
                     request.session['user_id'] = str(user.user_id)
                     success = {'message': "Please enter otp and verify your email"}
-                    return render (request, 'home.html', context=success)
+                    return render (request, 'auth/home.html', context=success)
                 else:
                     failure = {'message': 'Check your Password'}
                     return render(request, 'auth/login.html', context=failure)
@@ -129,7 +129,7 @@ def verify_otp(request):
                         user.save()
 
                         success = {'message': 'OTP verification successful'}
-                        return render(request, 'success.html', context=success)
+                        return render(request, 'auth/success.html', context=success)
                 else:
                     error = {'message': 'OTP verification failure, enter valid OTP'}
                     return render(request, 'auth/verify_otp.html', context=error)
@@ -154,7 +154,7 @@ def generate_otp(request, purpose):
             redirect_url = 'auth/forgot_password.html'
         else:
             error = {'message': 'Invalid purpose'}
-            return render(request, 'invalid.html', context=error)
+            return render(request, 'auth/invalid.html', context=error)
 
         try:
             user = User.objects.get(email=email)
@@ -184,7 +184,7 @@ def generate_otp(request, purpose):
 
         except Exception as e:
             error = {'message': str(e)}
-            return render(request, 'invalid.html', context=error)
+            return render(request, 'auth/invalid.html', context=error)
     else:
         if purpose == 'verify':
             return render(request, 'auth/verify_otp.html')
@@ -197,7 +197,9 @@ def login(request):
         if check_password(password, user.password):
             request.session['login_email']= user.email
             request.session['user_id'] = str(user.user_id)
-            return render (request, 'home.html', context=success)
+            if user.role == 'Admin':
+                return render (request, 'admin/admin_console.html', context=success)
+            return render (request, 'auth/home.html', context=success)
         else:
             failure = {'message': 'Check your Password'}
             return render(request, 'auth/login.html', context=failure)
@@ -282,7 +284,7 @@ def reset_password(request, purpose):
                 user.save()
 
                 success = {'message': 'Password reset successful!'}
-                return render(request, 'success.html', context=success) 
+                return render(request, 'auth/success.html', context=success) 
             return render(request, 'auth/forgot_password.html', {'message': 'OTP verification failure, enter valid OTP!!'})
 
     elif request.method == 'GET':
@@ -304,45 +306,52 @@ def reset_password(request, purpose):
 #     return render(request, 'home.html')
 
 
+
+
+############## SEND MAIL TO USER THAT ACCOUNT DELETED
+
 def delete_user(request):
     if request.method == "POST":
-        email = request.session.get('email_id', '')
-        user = User.objects.filter(email=email).first()
+        email = request.session.get('login_email', '')
+        password = request.POST['password']
+        
+        user =  User.objects.filter(email=email).first()
+        if not check_password(password, user.password):
+            error= {'message' : 'Incorrect Password. Try again.'}
+            return render(request, 'auth/delete_user.html', context=error)
+        
+        try:
+            user_addr = UserAddr.objects.filter(user=user).first()
+            order = Order.objects.filter(user=user, order_status='Delivered').first()
 
-        if user is not None:
-            try:
-                user_addr = UserAddr.objects.filter(user_id=user.user_id).first()
-
-                if user_addr:
-                    shipping_addr = get_object_or_404(ShippingAddress, addr_id=user_addr.addr_id)
-
-                    orders_with_address = Order.objects.filter(addr=shipping_addr)
-
-                    if orders_with_address.exists():
-                        return JsonResponse({'status': 'Failure', 'message': 'Cannot delete user, associated orders exist.'}, status=400)
-                    
-                    user_addr.delete()
-                    shipping_addr.delete()
-
-                user.delete()
-
-                success = {'status': 'Success', 'message': 'User deleted successfully'}
-                return JsonResponse(success, status=200)
-            except Exception as e:
-                print(e)
-                error = {'status': 'Failure', 'message': 'Check the details and try again'}
-                return JsonResponse(error, status=400)
-        else:
-            error = {'status': 'Failure', 'message': 'User not found'}
+            if order:
+                
+                error= {'message' : 'You have undelivered orders. Contact customer service for information.'}
+                return render(request, 'auth/home.html', context=error)
             
-            
-            
-            
-########## HTML page for confirm user delete
-######## User-Settings page and options in the settings page
+            if user_addr:
+                user_addr.delete()
+
+            # Log the user out and delete the account
+            logout(request)
+            user.delete()
+
+            success= {'message' : 'Account deleted successfully.'}
+            return render(request, 'auth/signup.html', context=success)
+        
+        except Exception as e:
+            print(e)
+            error= {'message': 'An error occurred while deleting your account.'}
+            return render(request, 'auth/delete_user.html', context=error)
+
+    return render(request, 'auth/delete_user.html')
+        
+        
+        
+####### User-Settings page and options in the settings page
 
 def logout(request):
     # Clear session variables to log the user out
-    message = "You have been logged out successfully"
     request.session.clear()
-    return render (request, 'auth/login.html')
+    success = {'message': "You have been logged out successfully"}
+    return render (request, 'auth/login.html', context= success)

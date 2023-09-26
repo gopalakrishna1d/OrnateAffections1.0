@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>    
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .add-to-cart-button {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body align="center">
+    <h1>Home</h1>
+        {% csrf_token %}
+        <p>{{message}}</p><br>
+        
+        <a href="/add_to_cart/">Add To Cart</a><br>
+        <a href="/add_to_wishlist/">Add To Wishlist</a><br>
+        <a href="/get_cart_items/">Get Cart Items</a><br>
+        <a href="/get_wishlist_items/">Wishlist Items</a><br>
+        <a href="/move_to_cart/">Move To Cart</a><br>
+        <a href="/save_for_later/">Save for Later</a><br>
+        <a href="/delete_from_cart/">Delete from Cart</a><br>
+        <a href="/remove_from_wishlist/">Delete from Wishlist</a><br><br>
+
+        <a href ="/settings/">Settings</a><br>
+        <a href ="/verify_otp/" target="_blank">Verify OTP</a><br>
+        <a href="/reset_password/logged_in/">Reset Password</a><br>
+        <a href="/delete_user/">Delete account</a><br>
+        <a href="/logout/">LOGOUT</a>
+    </form>
+
+    <h1>User Page</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Stock Quantity</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.product_id }}</td>
+                <td>{{ product.product_name }}</td>
+                <td>{{ product.description }}</td>
+                <td>${{ product.price }}</td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>
+                    <form method="post" action="{% url 'add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button class="add-to-cart-button" type="submit">Add to Cart</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No products available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

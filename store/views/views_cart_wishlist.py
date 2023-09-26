@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from .views_user_auth import login
-from ..models import User, Product, Cart, WishList # ShippingAddress, UserAddr, Review , Order#, OrderItem, Payment
+from ..models import User, Product, Cart, WishList, ShippingAddress, UserAddr, Review , Order#, OrderItem, Payment
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
@@ -45,8 +45,9 @@ def add_to_cart(request):
             return JsonResponse(error, status=400)
 
     else:
-        error = {'status': 'Failure', 'message': 'Only POST requests are allowed'}
-        return JsonResponse(error, status=405)
+        user_id = request.session.get('user_id', '')
+        print(user_id)
+        return render(request, 'cart_wishlist/cart.html')
 
 
 def get_cart_items(request):
