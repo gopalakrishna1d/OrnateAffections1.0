@@ -6,11 +6,14 @@ import store.views.views_prod as prod_views
 import store.views.views_cart_wishlist as cart_wishlist_views
 import store.views.views_user_auth as user_auth_views
 import store.views.views_address as addr_views
+import store.views.views_index as index_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    path('', user_auth_views.signup, name= 'signup'),
+    path('', index_views.product_list, name= 'product_list'),
+    path('index/', index_views.product_list, name= 'product_list'),
+
     path('signup/', user_auth_views.signup, name= 'signup'),
     path('generate_otp/verify/', user_auth_views.generate_otp, {'purpose': 'verify'}, name='generate_otp_verify'),
     path('generate_otp/reset/', user_auth_views.generate_otp, {'purpose': 'reset'}, name='generate_otp_reset'),

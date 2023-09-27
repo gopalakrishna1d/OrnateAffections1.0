@@ -52,42 +52,7 @@
         <a href="/reset_password/logged_in/">Reset Password</a><br>
         <a href="/delete_user/">Delete account</a><br>
         <a href="/logout/">LOGOUT</a>
-    </form>
+    </form><br>
 
-    <h1>User Page</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Product ID</th>
-                <th>Product Name</th>
-                <th>Description</th>
-                <th>Price</th>
-                <th>Stock Quantity</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in products %}
-            <tr>
-                <td>{{ product.product_id }}</td>
-                <td>{{ product.product_name }}</td>
-                <td>{{ product.description }}</td>
-                <td>${{ product.price }}</td>
-                <td>{{ product.stock_quantity }}</td>
-                <td>
-                    <form method="post" action="{% url 'add_to_cart' product.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button class="add-to-cart-button" type="submit">Add to Cart</button>
-                    </form>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6">No products available.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </body>
 </html>

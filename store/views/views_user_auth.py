@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from ..models import User, ShippingAddress, UserAddr, Order, Admin # OrderItem, Payment
+from ..models import User, ShippingAddress, UserAddr, Order, Admin, OrderItem, Payment
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
 from django.core.mail import send_mail
@@ -48,10 +48,6 @@ def signup(request):
 
         if len(password) < 8:
             error = {'status': 'failure', 'message': 'Password should be at least 8 characters long'}
-            return JsonResponse(error, status=400)
-
-        if not re.match(r'^[A-Za-z]{2,}$', full_name):
-            error = {'status': 'failure', 'message': 'Invalid fullname'}
             return JsonResponse(error, status=400)
 
         if not re.match(r'^\d{10}$', phone):
