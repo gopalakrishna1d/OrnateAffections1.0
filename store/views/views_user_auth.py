@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.sessions.models import Session
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.utils import timezone
 from datetime import timedelta
 import random
@@ -95,8 +95,8 @@ def signup(request):
                 if check_password(password, user.password):
                     request.session['login_email']= user.email
                     request.session['user_id'] = str(user.user_id)
-                    success = {'message': "Please enter otp and verify your email"}
-                    return render (request, 'auth/home.html', context=success)
+                    request.session['message'] = f'Welcome {user.username}, Please enter OTP and verify your account'
+                    return redirect('/')
                 else:
                     failure = {'message': 'Check your Password'}
                     return render(request, 'auth/login.html', context=failure)
@@ -188,14 +188,28 @@ def generate_otp(request, purpose):
             return render(request, 'auth/password_otp.html')
 
 
+
+# def home(request):
+#     # This is a sample protected view that requires the user to be logged in
+#     return render(request, 'index.html')
+
+
 def login(request):
     def login_anyways():
         if check_password(password, user.password):
             request.session['login_email']= user.email
             request.session['user_id'] = str(user.user_id)
             if user.role == 'Admin':
+                success = {'message': f'Welcome back {user.username}'}
                 return render (request, 'admin/admin_console.html', context=success)
-            return render (request, 'auth/home.html', context=success)
+            else:
+                if user.is_verified:
+                    request.session['verified_login']= user.email
+                    request.session['message'] = f'Welcome back {user.username}'
+                    return redirect('/')
+                else:
+                    request.session['message'] = f'Welcome {user.username}, Please enter OTP and verify your account'
+                    return redirect('/')
         else:
             failure = {'message': 'Check your Password'}
             return render(request, 'auth/login.html', context=failure)
@@ -210,11 +224,6 @@ def login(request):
             return render(request, 'auth/login.html', context=error)
         
         if user is not None:
-            if user.is_verified:
-                success = {'message': f'Welcome back {user.username}'}
-                return login_anyways()
-            else:
-                success = {'message': "Please enter otp and verify your email"}
                 return login_anyways()
             
         error = {'status': 'failure', 'message': 'User does not exist'}
@@ -269,8 +278,7 @@ def reset_password(request, purpose):
             if user.otp == otp:
                 current_time = timezone.now()
                 if user.otp_expiration < current_time:
-                    error = {'message': 'OTP has expired'}
-                    return JsonResponse(error, status=400)
+                    return render(request, 'auth/forgot_password.html', {'message': 'OTP has expired, generate a new one'})
 
                 if password != confirm_password:
                     return render(request, 'auth/forgot_password.html', {'message': 'New Passwords do not match'})
@@ -294,16 +302,6 @@ def reset_password(request, purpose):
 
 
 
-
-
-# @login_required
-# def home(request):
-#     # This is a sample protected view that requires the user to be logged in
-#     return render(request, 'home.html')
-
-
-
-
 ############## SEND MAIL TO USER THAT ACCOUNT DELETED
 
 def delete_user(request):
@@ -323,7 +321,7 @@ def delete_user(request):
             if order:
                 
                 error= {'message' : 'You have undelivered orders. Contact customer service for information.'}
-                return render(request, 'auth/home.html', context=error)
+                return render(request, 'index.html', context=error)
             
             if user_addr:
                 user_addr.delete()

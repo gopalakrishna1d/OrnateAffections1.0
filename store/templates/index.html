@@ -1,44 +1,64 @@
-<!-- product_list.html -->
+{% load static %}
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Product List</title>
-    <style>
-        .product-card {
-            border: 1px solid #ddd;
-            margin: 10px;
-            padding: 10px;
-            width: 300px;
-            display: inline-block;
-        }
-
-        .product-card h2 {
-            font-size: 20px;
-        }
-
-        .product-card p {
-            margin-top: 10px;
-        }
-
-        .user-symbol {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 20px;
-        }
-    </style>
+    <title>Index</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/index.css' %}">
 </head>
 <body align="center">
-    <iframe src="auth/home.html" title="products" width="100%" height="100%"></iframe>
+    {% if verified_login %}
+    <div>
+        <form>
+            {% csrf_token %}
+            <p>{{message}}</p><br>
+            
+            <a href="/add_to_cart/">Add To Cart</a><br>
+            <a href="/add_to_wishlist/">Add To Wishlist</a><br>
+            <a href="/get_cart_items/">Get Cart Items</a><br>
+            <a href="/get_wishlist_items/">Wishlist Items</a><br>
+            <a href="/move_to_cart/">Move To Cart</a><br>
+            <a href="/save_for_later/">Save for Later</a><br>
+            <a href="/delete_from_cart/">Delete from Cart</a><br>
+            <a href="/remove_from_wishlist/">Delete from Wishlist</a><br><br>
+
+            <a href ="/settings/">Settings</a><br>
+            <a href="/reset_password/logged_in/">Reset Password</a><br>
+            <a href="/delete_user/">Delete account</a><br>
+            <a href="/logout/">LOGOUT</a>
+            
+        </form><br>
+    </div>
+    {% elif login_email %}
+    <div>
+        <form>
+            {% csrf_token %}
+            <p>{{message}}</p><br>
+            
+            <a href ="/verify_otp/" target="_blank">Verify OTP</a><br>
+            <a href="/reset_password/logged_in/">Reset Password</a><br>
+            <a href="/delete_user/">Delete account</a><br>
+            <a href="/logout/">LOGOUT</a>
+        </form>
+    </div>
+
 
     <a class="user-symbol" href="{% url 'login' %}">👤</a>
+    {% else %}
+    <div>
+        <a href="login/"><h6>Please login to get all the features</h6></a>
+        
+    </div>
+    {% endif %}
     <h1>Product List</h1>
     {% for product in products %}
     <div class="product-card">
-        <h2>{{ product.product_name }}</h2>
-        <p>{{ product.description }}</p>
-        <p><strong>Price: ₹{{ product.price }}</strong></p>
-        <p>Stock Quantity: {{ product.stock_quantity }}</p>
+        <!-- <button type="button"> -->
+            <h2>{{ product.product_name }}</h2>
+            <p>{{ product.description }}</p>
+            <p><strong>Price: ₹{{ product.price }}</strong></p>
+            <p>Stock Quantity: {{ product.stock_quantity }}</p>
+        <!-- </button> -->
     </div>
     {% endfor %}
 </body>

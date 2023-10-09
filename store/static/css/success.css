@@ -1,0 +1,25 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    text-align: center;
+    padding: 0;
+
+}
+
+h1 {
+    color: #333;
+}
+
+p {
+    color: #555;
+    margin-top: 10px;
+}
+
+/* Center the content vertically */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* 100% of viewport height */
+}

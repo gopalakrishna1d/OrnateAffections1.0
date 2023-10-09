@@ -5,6 +5,7 @@ from ..models import User, Product, ShippingAddress, UserAddr, Order, Admin # Or
 from django.contrib.auth.hashers import check_password, make_password
 from django.conf import settings
 from django.core.mail import send_mail
+from .views_user_auth import login
 from django.contrib.sessions.models import Session
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -17,5 +18,10 @@ import re
 
 
 def product_list(request):
+    message = request.session.get('message', None)
+    login_email = request.session.get('login_email', None)
+    verified_login = request.session.get('verified_login', None)
     products = Product.objects.all()
-    return render(request, 'index.html', {'products': products})
+
+    request.session.pop('message', None)
+    return render(request, 'index.html', {'products': products, 'login_email': login_email, 'verified_login':verified_login, 'message': message})

@@ -1,7 +1,10 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
 </head>
 <body align="center">
     <h1>Login</h1>
@@ -14,7 +17,7 @@
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required><br>
 
-        <button type="submit">Login</button>
+        <button type="submit">Login</button><br>
         <a href="/forgoten_password/" target="_blank">Forgot password?</a><br><hr><br>
         <a href="/signup/"><button type="button"> Create New Acccount?</button></a>
     </form>
