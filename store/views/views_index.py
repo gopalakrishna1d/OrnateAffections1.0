@@ -15,13 +15,17 @@ import uuid
 import re
 
 
-
-
 def product_list(request):
-    message = request.session.get('message', None)
+    message = request.session.get('message', '')
     login_email = request.session.get('login_email', None)
     verified_login = request.session.get('verified_login', None)
+
     products = Product.objects.all()
 
     request.session.pop('message', None)
-    return render(request, 'index.html', {'products': products, 'login_email': login_email, 'verified_login':verified_login, 'message': message})
+    return render(request, 'index.html', {
+        'products': products, 
+        'login_email': login_email, 
+        'verified_login':verified_login, 
+        'message': message})
+

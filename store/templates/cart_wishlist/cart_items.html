@@ -1,13 +1,30 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/cart_items.css' %}">
     <title>Cart Items</title>
 </head>
 <body align="center">
     <h1>Cart Items</h1>
+    <p>{{message}}</p>
+    {% if verified_login %}
+
+    {% if user_id %}
+    {% for product in product_details %}
+    <div class="product-card">
+        <!-- <button type="button"> -->
+            <h2>{{ product.product_name }}</h2>
+            <p>{{ product.description }}</p>
+            <p>Quantity: {{ product.stock_quantity }}</p>
+        <!-- </button> -->
+    </div>
+    {% endfor %}
+    {%endif%}
     
-    {% if data %}
+    <!-- {% if data %}
         <table>
             <thead>
                 <tr>
@@ -28,6 +45,7 @@
         </table>
     {% else %}
         <p>No cart items found.</p>
+    {% endif %} -->
     {% endif %}
     
 </body>

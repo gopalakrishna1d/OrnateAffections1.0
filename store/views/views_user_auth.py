@@ -330,7 +330,7 @@ def delete_user(request):
             logout(request)
             user.delete()
 
-            success= {'message' : 'Account deleted successfully.'}
+            success= {'message' : 'Account deleted successfully. We are sad seeing you go :('}
             return render(request, 'auth/signup.html', context=success)
         
         except Exception as e:

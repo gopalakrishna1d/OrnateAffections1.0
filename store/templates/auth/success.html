@@ -12,6 +12,12 @@
 <body align="center">
     <h1>Success</h1><br><br>
     {{message}}
-    <p> You can close this tab now.</p>
+    <p> We will redirect you to the home page. </p>
+
+    <script>
+        setTimeout(function() {
+            window.location.href = "/";
+        }, 5000);
+    </script>
 </body>
 </html>

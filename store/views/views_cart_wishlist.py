@@ -50,14 +50,15 @@ def add_to_cart(request):
         return render(request, 'cart_wishlist/cart.html')
 
 
+
 def get_cart_items(request):
-    if request.method == 'POST':
         user_id = request.session.get('user_id', '')
+        verified_login = request.session.get('verified_login', '')
         if user_id is not None:
             try:
                 carts = get_list_or_404(Cart, user_id=user_id)
                 
-                cart_data = []
+                cart_data = ()
                 for cart in carts:
                     product = get_object_or_404(Product, product_id=cart.product_id)
 
@@ -67,29 +68,33 @@ def get_cart_items(request):
                         'quantity': cart.quantity
                     }
                     cart_data.append(product_details)
+                    return render(request, 'cart_wishlist/cart_items.html',context={'verified_login' : verified_login, 'user_id':user_id, 'message': 'Check your Password'})
+    
+            except Cart.DoesNotExist as e:
+                return render(request, 'cart_wishlist/cart_items.html',context={str(e)})
+    
 
-                response_data = {
-                    'status': 'Success',
-                    'message': 'Carts fetched successfully',
-                    'data': cart_data
-                }
-                return JsonResponse(response_data, status=200)
 
-            except Cart.DoesNotExist:
-                error = {'status': 'Failure', 'message': 'Carts not found'}
-                return JsonResponse(error, status=404)
 
-            except Product.DoesNotExist:
-                error = {'status': 'Failure', 'message': 'Product not found'}
-                return JsonResponse(error, status=404)
+    #             return render(request, 'cart_wishlist/cart_items.html', {'cart_data':cart_data, 'product_details':product_details, 'verified_login':verified_login})
 
-            except Exception as e:
-                error = {'status': 'Failure', 'message': str(e)}
-                return JsonResponse(error, status=400)
+    #         except Cart.DoesNotExist:
+    #             error = {'status': 'Failure', 'message': 'Carts not found'}
+    #             return JsonResponse(error, status=404)
 
-        else:
-            error = {'status': 'Failure', 'message': 'user_id is required'}
-            return JsonResponse(error, status=400)
+    #         except Product.DoesNotExist:
+    #             error = {'status': 'Failure', 'message': 'Product not found'}
+    #             return JsonResponse(error, status=404)
+
+    #         except Exception as e:
+    #             error = {'status': 'Failure', 'message': str(e)}
+    #             return JsonResponse(error, status=400)
+
+    #     else:
+    #         error = {'status': 'Failure', 'message': 'user_id is required'}
+    #         return JsonResponse(error, status=400)
+        
+    # return render (request, 'cart_wishlist/cart_items.html')
 
 
 def add_to_wishlist(request):
