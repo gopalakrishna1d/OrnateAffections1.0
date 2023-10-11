@@ -13,6 +13,8 @@ urlpatterns = [
     
     path('', index_views.product_list, name= 'product_list'),
     path('index/', index_views.product_list, name= 'product_list'),
+    
+    path('settings/', user_auth_views.settings, name= 'settings'),
 
     path('signup/', user_auth_views.signup, name= 'signup'),
     path('generate_otp/verify/', user_auth_views.generate_otp, {'purpose': 'verify'}, name='generate_otp_verify'),

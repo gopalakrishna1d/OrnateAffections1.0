@@ -1,0 +1,54 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Settings</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/settings.css' %}">
+</head>
+<body align="center">
+    {% if verified_login %}
+    <div>
+        <form>
+            {% csrf_token %}
+            <p>{{message}}</p><br>
+            
+            <a href="/add_to_cart/">Add To Cart</a><br>
+            <a href="/add_to_wishlist/">Add To Wishlist</a><br>
+            <a href="/get_cart_items/">Get Cart Items</a><br>
+            <a href="/get_wishlist_items/">Wishlist Items</a><br>
+            <a href="/move_to_cart/">Move To Cart</a><br>
+            <a href="/save_for_later/">Save for Later</a><br>
+            <a href="/delete_from_cart/">Delete from Cart</a><br>
+            <a href="/remove_from_wishlist/">Delete from Wishlist</a><br><br>
+
+            <a href ="/settings/">Settings</a><br>
+            <a href="/reset_password/logged_in/">Reset Password</a><br>
+            <a href="/delete_user/">Delete account</a><br>
+            <a href="/logout/">LOGOUT</a>
+            
+        </form><br>
+    </div>
+    {% elif login_email %}
+    <div>
+        <form>
+            {% csrf_token %}
+            <p>{{message}}</p><br>
+            
+            <a href ="/verify_otp/">Verify OTP</a><br>
+            <a href="/reset_password/logged_in/">Reset Password</a><br>
+            <a href="/delete_user/">Delete account</a><br>
+            <a href="/logout/">LOGOUT</a>
+        </form>
+    </div>
+
+    <a class="user-symbol" href="{% url 'login' %}">👤</a>
+    {% else %}
+    <div>
+        <a href="login/"><h4>Please login to get all the features</h4></a>
+        <a class="user-symbol" href="{% url 'login' %}">👤</a>
+        
+    </div>
+    {% endif %}
+</body>
+</html>

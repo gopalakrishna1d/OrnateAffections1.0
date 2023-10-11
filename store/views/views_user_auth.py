@@ -95,7 +95,7 @@ def signup(request):
                 if check_password(password, user.password):
                     request.session['login_email']= user.email
                     request.session['user_id'] = str(user.user_id)
-                    request.session['message'] = f'Welcome {user.username}, Please enter OTP and verify your account'
+                    request.session['message'] = f'Welcome {user.username}, Please verify OTP and activate your account'
                     return redirect('/')
                 else:
                     failure = {'message': 'Check your Password'}
@@ -230,6 +230,11 @@ def login(request):
         return render(request, 'auth/login.html', context=error)
     
     return render(request, 'auth/login.html')
+
+
+def settings(request):
+    email = request.session.get('login_email', '')
+    return render(request, 'settings.html')
 
 
 def forgoten_password(request):
