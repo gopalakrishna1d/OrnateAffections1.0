@@ -16,6 +16,8 @@ urlpatterns = [
     
     path('settings/', user_auth_views.settings, name= 'settings'),
 
+    path('product/<int:product_id>/', index_views.product_details, name='product_details'),
+
     path('signup/', user_auth_views.signup, name= 'signup'),
     path('generate_otp/verify/', user_auth_views.generate_otp, {'purpose': 'verify'}, name='generate_otp_verify'),
     path('generate_otp/reset/', user_auth_views.generate_otp, {'purpose': 'reset'}, name='generate_otp_reset'),

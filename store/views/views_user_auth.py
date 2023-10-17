@@ -204,6 +204,7 @@ def login(request):
                 return render (request, 'admin/admin_console.html', context=success)
             else:
                 if user.is_verified:
+                    request.session.pop('login_email', None)
                     request.session['verified_login']= user.email
                     request.session['message'] = f'Welcome back {user.username}'
                     return redirect('/')
@@ -213,7 +214,7 @@ def login(request):
         else:
             failure = {'message': 'Check your Password'}
             return render(request, 'auth/login.html', context=failure)
-        
+
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
@@ -233,8 +234,11 @@ def login(request):
 
 
 def settings(request):
-    email = request.session.get('login_email', '')
-    return render(request, 'settings.html')
+    login_email = request.session.get('login_email', '')
+    verified_login = request.session.get('verified_login', '')
+    return render(request, 'settings.html', 
+                  {'login_email':login_email, 
+                   'verified_login':verified_login})
 
 
 def forgoten_password(request):

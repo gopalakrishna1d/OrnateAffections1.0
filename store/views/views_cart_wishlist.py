@@ -14,8 +14,8 @@ from django.http import JsonResponse
 def add_to_cart(request):
     if request.method == 'POST':
         user_id = request.session.get('user_id', '')
-        product_id = request.POST.get('product_id')
-        quantity = request.POST.get('quantity')
+        product_id = request.POST.get('product_id') # selected product id must be posted here
+        quantity = request.POST.get('quantity')  # as per the user's requirements
 
         try:
             user = get_object_or_404(User, user_id=user_id)
@@ -26,27 +26,25 @@ def add_to_cart(request):
 
                 login(request, user)
                 success = {'status': 'Success', 'message': 'Successfully added to cart'}
-                return JsonResponse(success, status=200)
+                return render(request, 'cart_wishlist/cart.html', {'message': f'Product successfully added to cart'})
             else:
                 error = {'status': 'Failure', 'message': 'Quantity exceeds available stock'}
                 return JsonResponse(error, status=400)
 
         except User.DoesNotExist:
-            error = {'status': 'Failure', 'message': 'User not found'}
-            return JsonResponse(error, status=404)
+            error = {'status': 'Failure'}
+            return render(request, 'cart_wishlist/cart.html', {'message': 'User not found'})
 
         except Product.DoesNotExist:
-            error = {'status': 'Failure', 'message': 'Product not found'}
-            return JsonResponse(error, status=404)
+            error = {'status': 'Failure'}
+            return render(request, 'cart_wishlist/cart.html', {'message': 'Product not found'})
 
         except Exception as e:
-            print(e)
             error = {'status': 'Failure', 'message': 'Error adding to cart'}
-            return JsonResponse(error, status=400)
+            return render(request, 'cart_wishlist/cart.html', {'message': str(e)})
 
     else:
         user_id = request.session.get('user_id', '')
-        print(user_id)
         return render(request, 'cart_wishlist/cart.html')
 
 
@@ -68,7 +66,10 @@ def get_cart_items(request):
                         'quantity': cart.quantity
                     }
                     cart_data.append(product_details)
-                    return render(request, 'cart_wishlist/cart_items.html',context={'verified_login' : verified_login, 'user_id':user_id, 'message': 'Check your Password'})
+                    return render(request, 'cart_wishlist/cart_items.html',
+                                  {'verified_login' : verified_login, 
+                                   'user_id':user_id, 
+                                   'message': 'Check your Password'})
     
             except Cart.DoesNotExist as e:
                 return render(request, 'cart_wishlist/cart_items.html',context={str(e)})

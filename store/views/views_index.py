@@ -29,3 +29,10 @@ def product_list(request):
         'verified_login':verified_login, 
         'message': message})
 
+
+def product_details(request, product_id):
+    # Retrieve the product details from the database based on the product_id
+    product = get_object_or_404(Product, pk=product_id)  # Retrieve the product by its primary key
+
+    # Render the product details template and pass the product data to it
+    return render(request, 'product_details.html', {'product': product})
