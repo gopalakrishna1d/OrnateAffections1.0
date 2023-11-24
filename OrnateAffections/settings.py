@@ -24,6 +24,7 @@ SECRET_KEY = 'django-insecure-+rwqcdc5v&kc+prm8q2^8j59+7qvj0yf1ufk8an^yg7#=3dm!i
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+######################## You’re seeing this error because you have DEBUG = True in your Django settings file. Change that to False, and Django will display a standard 404 page.
 
 ALLOWED_HOSTS = []
 
@@ -44,11 +45,23 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+# Session Engine
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Session Cookie Age (adjust as needed)
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+
+# Session Cookie Name (optional, but can be helpful)
+SESSION_COOKIE_NAME = 'ora_sessions'
+
+
 
 ROOT_URLCONF = 'OrnateAffections.urls'
 
@@ -90,6 +103,7 @@ TIME_ZONE = 'UTC'
 
 # Static and Media Files (you may need to customize these paths)
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'store/static')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

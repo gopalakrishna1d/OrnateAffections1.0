@@ -1,0 +1,50 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Index</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/index.css' %}">
+</head>
+<body align="center">
+    {% if verified_login %}
+        <p>{{ message }}</p><br>
+    {% elif login_email %}
+        <p>Please verify your OTP for more features.</p>
+    {% else %}
+        <h4>Please login to get all the features</h4>
+    {% endif %}
+    
+    <a class="user-symbol" href="{% url 'settings' %}">👤</a>
+
+    <h1>Product List</h1>
+    {% for product in products %}
+    <div class="product-card" data-product-id="{{ product.id }}">
+        <h2>{{ product.product_name }}</h2>
+        <p>{{ product.description }}</p>
+        <p><strong>Price: ₹{{ product.price }}</strong></p>
+        <p>Stock Quantity: {{ product.stock_quantity }}</p>
+    </div>
+    {% endfor %}
+
+
+    <script>
+        // Add a click event listener to all product cards
+        const productCards = document.querySelectorAll('.product-card');
+    
+        productCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Retrieve the product ID from the data attribute
+                const productId = card.dataset.productId;
+    
+                // Construct the URL for the product details page
+                const productDetailsUrl = `/product/${productId}`; // Replace with your actual URL
+    
+                // Open a new tab with the product details page
+                window.open(productDetailsUrl, '_blank');
+            });
+        });
+    </script>
+    
+</body>
+</html>

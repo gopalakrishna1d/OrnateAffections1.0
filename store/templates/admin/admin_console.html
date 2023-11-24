@@ -1,0 +1,23 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/admin_console.css' %}">
+</head>
+<body align="center">
+    <h1>Admin Home</h1>
+        <p>{{message}}</p><br>
+        
+        <a href="/add_ornate_af_product/">Add Product</a><br>
+        <a href="/get_ornate_af_product/">Products List</a><br>
+        <a href="/update_ornate_af_prod_details/">Update Product Details</a><br><br><hr>
+
+        <a href ="/settings/">Settings</a><br>
+        <a href ="/verify_otp/" target="_blank">Verify OTP</a><br>
+        <a href="/reset_password/logged_in/">Reset Password</a><br>
+        <a href="/logout/">LOGOUT</a>
+    </form>
+</body>
+</html>
