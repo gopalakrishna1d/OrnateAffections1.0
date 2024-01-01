@@ -1,2 +1,0 @@
-# OrnateAffections
-Gifting Company
