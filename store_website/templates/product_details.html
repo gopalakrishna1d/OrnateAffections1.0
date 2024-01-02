@@ -1,0 +1,21 @@
+<!-- product_details.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ product.product_name }} Details</title>
+    <!-- Add your CSS and other styling here if needed -->
+</head>
+<body>
+    <h1>{{ product.product_name }}</h1>
+    <p>{{ product.description }}</p>
+    <p><strong>Price: ₹{{ product.price }}</strong></p>
+    <p>Stock Quantity: {{ product.stock_quantity }}</p>
+
+    <!-- Add more product details here if needed -->
+
+    <!-- You can include links to other pages or actions here as well -->
+
+    <a href="{% url 'index' %}">Back to Product List</a>
+</body>
+</html>
