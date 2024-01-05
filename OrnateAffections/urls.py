@@ -14,7 +14,7 @@ urlpatterns = [
     path('', index_views.product_list, name= 'product_list'),
     path('index/', index_views.product_list, name= 'product_list'),
     
-    path('settings/', user_auth_views.settings, name= 'settings'),
+    path('user_settings/', user_auth_views.user_settings, name= 'user_settings'),
 
     path('product/<int:product_id>/', index_views.product_details, name='product_details'),
 

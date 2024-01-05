@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from ..models import User, ShippingAddress, UserAddr, Order, Admin, OrderItem, Payment
 from django.contrib.auth.hashers import check_password, make_password
-from django.conf import settings
+from rest_framework.decorators import api_view
 from django.core.mail import send_mail
 from django.contrib.sessions.models import Session
 from django.http import JsonResponse, HttpResponseRedirect
@@ -12,101 +12,114 @@ from datetime import timedelta
 import random
 import uuid
 import re
+from django.db import transaction
 
-###########Add country code to the phone number
+from .serializers import UserSerializer, DeleteUserSerializer
+from copy import deepcopy
 
-def signup(request):
+
+from django.conf import settings
+
+@api_view(['POST', 'GET']) ############ adjust exception statements for production
+def signup(request): 
     if request.method == 'POST':
-        email = request.POST['email'].lower()
-        full_name = request.POST['full_name']
-        phone = request.POST['phone']
-        password = request.POST['password']
-        role =  request.POST.get('role', 'customer')
+        mutable_data = deepcopy(request.data)
+        serializer = UserSerializer(data = mutable_data)
+        try:
+            serializer.validate(mutable_data)
+            # print(mutable_data)
+        except Exception as e:
+            error = {'message': str(e)}
+            return render(request, 'auth/signup.html', context=error)
 
-        name_parts = full_name.split()
-
-        if len(name_parts) == 1:
-            first_name = name_parts[0]
-            middle_name = ""
-            last_name = ""
-
-        elif len(name_parts) == 2:
-            first_name = name_parts[0]
-            middle_name = ""
-            last_name = name_parts[1]
-
-        else:
-            first_name = name_parts[0]
-            middle_name = " ".join(name_parts[1:-1])
-            last_name = name_parts[1]
-        
-        username = request.POST.get('username', first_name)
-
-        if not first_name or not phone or not email or not password:
-            error = {'status': 'failure', 'message': 'Please fill in all the required fields'}
-            return JsonResponse(error, status=400)
-
-        if len(password) < 8:
-            error = {'status': 'failure', 'message': 'Password should be at least 8 characters long'}
-            return JsonResponse(error, status=400)
-
-        if not re.match(r'^\d{10}$', phone):
-            error = {'status': 'failure', 'message': 'Invalid phone number'}
-            return JsonResponse(error, status=400)
-
-        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-            error = {'status': 'failure', 'message': 'Invalid email address'}
-            return JsonResponse(error, status=400)
-        
-        user_id = uuid.uuid4()
-
-        otp = str(random.randint(100000, 999999))
-        otp_expiration = timezone.now() + timedelta(minutes=5)
-        
-        password_hash = make_password(password)
-        current_timestamp = timezone.now()
-
-        exists = User.objects.filter(email=email).first()
-        if exists is None:
+        if serializer.is_valid():
+            email = serializer.validated_data['email'].lower()
+            full_name = serializer.validated_data['full_name']
+            phone = serializer.validated_data['phone']
+            password = serializer.validated_data['password']
+            role =  serializer.validated_data.get('role', 'customer')
             try:
-                user = User.objects.create(
-                    user_id= user_id, username = username, email=email, otp=otp, otp_expiration=otp_expiration, first_name=first_name, 
-                    middle_name=middle_name, last_name=last_name, password=password_hash, phone=phone, is_verified=False, 
-                    created_dtm=current_timestamp, modified_dtm=current_timestamp, role = role
-                )
-                send_mail(
-                    'OTP Verification',
-                    f'Greetings, your OTP to signup with Ornate Affections is: {otp} (valid only for 5 mins)',
-                    settings.EMAIL_HOST_USER,
-                    [email],
-                    fail_silently=False,
-                )
-            except:
-                failure={'message':'User already exists'}
-                return render (request, 'auth/signup.html', context= failure)
-            
-        if role == 'Admin':
-            Admin.objects.create(user_id=user_id, username=username, password=password_hash, 
-                                    email=email, first_name=first_name, last_name=last_name)
-            return render(request, 'admin/admin_console.html')
-        else:
-            user = User.objects.get(email=email.strip())
-            if user is not None:
-                if check_password(password, user.password):
-                    request.session['login_email']= user.email
-                    request.session['user_id'] = str(user.user_id)
-                    request.session['message'] = f'Welcome {user.username}, Please verify OTP and activate your account'
-                    return redirect('/')
-                else:
-                    failure = {'message': 'Check your Password'}
-                    return render(request, 'auth/login.html', context=failure)
-            else:
-                failure = {'message': 'User does not exist. Try again and if the error persists contact customer service'}
-                return render(request, 'auth/login.html')
+                with transaction.atomic():
+                    try:
+                        name_parts = full_name.split()
+
+                        if len(name_parts) == 1:
+                            first_name = name_parts[0]
+                            middle_name = ""
+                            last_name = ""
+
+                        elif len(name_parts) == 2:
+                            first_name = name_parts[0]
+                            middle_name = ""
+                            last_name = name_parts[1]
+
+                        else:
+                            first_name = name_parts[0]
+                            middle_name = " ".join(name_parts[1:-1])
+                            last_name = name_parts[-1]
+                        
+                        username = serializer.validated_data.get('username', first_name)
+                    except Exception as e:
+                        print(e)
+
+                    otp = str(random.randint(100000, 999999))
+                    otp_expiration = timezone.now() + timedelta(minutes=5)
+                    
+                    password_hash = make_password(password)
+                    current_timestamp = timezone.now()
+
+                    exists = User.objects.filter(email=email).first()
+                    if exists is None:
+                        try:
+                            user = User.objects.create(
+                                username = username, email=email, otp=otp, otp_expiration=otp_expiration, first_name=first_name, 
+                                middle_name=middle_name, last_name=last_name, password=password_hash, phone=phone, is_verified=False, 
+                                created_dtm=current_timestamp, modified_dtm=current_timestamp, role = role
+                            )
+                            try:
+                                send_mail(
+                                    'OTP Verification',
+                                    f'Greetings, your OTP to signup with Ornate Affections is: {otp} (valid only for 5 mins)',
+                                    settings.EMAIL_HOST_USER,
+                                    [email],
+                                    fail_silently=False,
+                                )
+                            except Exception as e:
+                                error = {'message': str(e)}
+                                return render(request, 'auth/signup.html', context=error)
+
+                        except:
+                            failure={'message':'User already exists'}
+                            return render (request, 'auth/signup.html', context= failure)
+                    
+                    if role == 'Admin':
+                        Admin.objects.create(username=username, password=password_hash, 
+                                                email=email, first_name=first_name, last_name=last_name)
+                        return render(request, 'admin/admin_console.html')
+                    else:
+                        user = User.objects.get(email=email.strip())
+                        if user is not None:
+                            if check_password(password, user.password):
+                                request.session['login_email']= user.email
+                                request.session['user_id'] = str(user.user_id)
+                                request.session['message'] = f'Welcome {user.username}, Please verify OTP and activate your account'
+                                return redirect('/')
+                            else:
+                                failure = {'message': 'Check your Password'}
+                                return render(request, 'auth/login.html', context=failure)
+                        else:
+                            failure = {'message': 'User does not exist. Try again and if the error persists contact customer service'}
+                            return render(request, 'auth/login.html', context=failure)
+            except Exception as e:
+                error = {'message': str(e)}
+                return render(request, 'auth/signup.html', context=error)
+    elif request.method == 'GET':
+        return render(request, 'auth/signup.html')
     failure = {'message': 'Error signing up. Contact customer service'}
-    return render(request, 'auth/signup.html')
+    
 
 
+@api_view(['GET', 'POST'])
 def verify_otp(request):
     if request.method == 'POST':
         otp = request.POST['otp']
@@ -227,10 +240,10 @@ def login(request):
     return render(request, 'auth/login.html')
 
 
-def settings(request):
+def user_settings(request):
     login_email = request.session.get('login_email', '')
     verified_login = request.session.get('verified_login', '')
-    return render(request, 'settings.html', 
+    return render(request, 'user_settings.html', 
                   {'login_email':login_email, 
                    'verified_login':verified_login})
 
@@ -307,39 +320,45 @@ def reset_password(request, purpose):
 
 ############## SEND MAIL TO USER THAT ACCOUNT DELETED
 
+@api_view(['POST', 'GET'])
 def delete_user(request):
     if request.method == "POST":
-        email = request.session.get('login_email', '')
-        password = request.POST['password']
-        
-        user =  User.objects.filter(email=email).first()
-        if not check_password(password, user.password):
-            error= {'message' : 'Incorrect Password. Try again.'}
-            return render(request, 'auth/delete_user.html', context=error)
-        
-        try:
-            user_addr = UserAddr.objects.filter(user=user).first()
-            order = Order.objects.filter(user=user, order_status='Delivered').first()
+        mutable_data = deepcopy(request.data)
+        serializer = DeleteUserSerializer(mutable_data)
+        if serializer.is_valid():
+            serializer.validate(mutable_data)
 
-            if order:
-                
-                error= {'message' : 'You have undelivered orders. Contact customer service for information.'}
-                return render(request, 'index.html', context=error)
+            email = request.session.get('login_email', '')
+            password = serializer.validated_data['password']
             
-            if user_addr:
-                user_addr.delete()
+            user =  User.objects.filter(email=email).first()
+            if not check_password(password, user.password):
+                error= {'message' : 'Incorrect Password. Try again.'}
+                return render(request, 'auth/delete_user.html', context=error)
+            
+            try:
+                user_addr = UserAddr.objects.filter(user=user).first()
+                order = Order.objects.filter(user=user, order_status='Delivered').first()
 
-            # Log the user out and delete the account
-            logout(request)
-            user.delete()
+                if order:
+                    
+                    error= {'message' : 'You have undelivered orders. Contact customer service for information.'}
+                    return render(request, 'index.html', context=error)
+                
+                if user_addr:
+                    user_addr.delete()
 
-            success= {'message' : 'Account deleted successfully. We are sad seeing you go :('}
-            return render(request, 'auth/signup.html', context=success)
+                # Log the user out and delete the account
+                logout(request)
+                user.delete()
+
+                success= {'message' : 'Account deleted successfully. We are sad seeing you go :('}
+                return render(request, 'auth/signup.html', context=success)
         
-        except Exception as e:
-            print(e)
-            error= {'message': 'An error occurred while deleting your account.'}
-            return render(request, 'auth/delete_user.html', context=error)
+            except Exception as e:
+                print(e)
+                error= {'message': 'An error occurred while deleting your account.'}
+                return render(request, 'auth/delete_user.html', context=error)
 
     return render(request, 'auth/delete_user.html')
         
